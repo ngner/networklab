@@ -1,0 +1,34 @@
+#/etc/virsh-routednet-dnsmasq.hosts
+## nmcli general reload
+###
+192.168.192.1      laptop.routednet.labs.lab.example.com
+##### SNO
+192.168.192.10     api.acm.routednet.labs.lab.example.com
+192.168.192.10     api-int.acm.routednet.labs.lab.example.com
+192.168.192.10     oauth-openshift.apps.acm.routednet.labs.lab.example.com
+192.168.192.10     console-openshift-console.apps.acm.routednet.labs.lab.example.com
+192.168.192.10     canary-openshift-ingress-canary.apps.acm.routednet.labs.lab.example.com
+192.168.192.10     grafana-openshift-monitoring.apps.acm.routednet.labs.lab.example.com
+192.168.192.10     thanos-querier-openshift-monitoring.apps.acm.routednet.labs.lab.example.com
+192.168.192.10     assisted-image-service-multicluster-engine.apps.acm.routednet.labs.lab.example.com
+192.168.192.10     assisted-service-multicluster-engine.apps.acm.routednet.labs.lab.example.com
+##### MCE
+192.168.192.11     api-int.mce.routednet.labs.lab.example.com
+192.168.192.100    api.mce.routednet.labs.lab.example.com
+192.168.192.101    console-openshift-console.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    oauth-openshift.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    canary-openshift-ingress-canary.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    oauth-openshift.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    assisted-image-service-multicluster-engine.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    assisted-service-multicluster-engine.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    oauth-hosted-hcp-1.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    oauth-hosted-hcp-2.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    oauth-hosted-hcp-3.apps.mce.routednet.labs.lab.example.com
+192.168.192.101    oauth-hosted-hcp-4.apps.mce.routednet.labs.lab.example.com
+##### HCP
+192.168.192.14     console-openshift-console.apps.hcp-1.routednet.labs.lab.example.com
+192.168.192.14     canary-openshift-ingress-canary.apps.hcp-1.routednet.labs.lab.example.com
+192.168.192.17     console-openshift-console.apps.hcp-2.routednet.labs.lab.example.com
+192.168.192.17     canary-openshift-ingress-canary.apps.hcp-2.routednet.labs.lab.example.com
+EOF
+

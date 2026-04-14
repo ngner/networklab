@@ -1,0 +1,29 @@
+<!--
+WARNING: THIS IS AN AUTO-GENERATED FILE. CHANGES TO IT ARE LIKELY TO BE
+OVERWRITTEN AND LOST. Changes to this xml configuration should be made using:
+  virsh net-edit routednet
+or other application using the libvirt API.
+-->
+
+<network>
+  <name>routednet</name>
+  <uuid>a8d10d39-62e3-449a-b64b-3bf75a2372ee</uuid>
+  <forward mode='route'/>
+  <bridge name='virbr0' stp='on' delay='0'/>
+  <mac address='52:54:00:2a:3d:94'/>
+  <!-- CHANGE: replace lab.example.com with your own domain -->
+  <domain name='routednet.lab.example.com'/>
+  <ip address='192.168.192.1' netmask='255.255.255.0'>
+    <dhcp>
+      <range start='192.168.192.128' end='192.168.192.254'/>
+      <host mac='52:54:00:22:4d:4a' name='acm' ip='192.168.192.10'/>
+      <host mac='52:54:00:22:4d:4b' name='master-0' ip='192.168.192.11'/>
+      <host mac='52:54:00:22:4d:4c' name='master-1' ip='192.168.192.12'/>
+      <host mac='52:54:00:22:4d:4d' name='master-2' ip='192.168.192.13'/>
+      <host mac='52:54:00:22:4d:4e' name='worker-0' ip='192.168.192.14'/>
+      <host mac='52:54:00:22:4d:4f' name='worker-1' ip='192.168.192.15'/>
+      <host mac='52:54:00:22:4d:5a' name='worker-2' ip='192.168.192.16'/>
+      <host mac='52:54:00:22:4d:5b' name='worker-3' ip='192.168.192.17'/> 
+    </dhcp>
+  </ip>
+</network>

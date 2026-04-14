@@ -7,8 +7,13 @@ in OVN-Kubernetes environments.
 
 ## Lab curriculum
 
-The core content is in [consolidated-plan.md](consolidated-plan.md) -- a
-structured, multi-phase curriculum covering:
+**[slides.html](slides.html)** -- visual explainer deck (open in any browser,
+navigate with arrow keys). Covers concepts, topology diagrams, and the
+consulting decision framework. Use for short talks or as the lecture
+component before hands-on time.
+
+**[consolidated-plan.md](consolidated-plan.md)** -- detailed lab manual with
+copy-paste commands for hands-on exercises. Covers:
 
 | Phase | Topic |
 |-------|-------|

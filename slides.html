@@ -1131,6 +1131,143 @@ ovs-appctl ofproto/trace ovsbr0 \
     </table>
     <span class="lab-ref">Lab guide: Comparison Matrix</span>
   </section>
+
+  <!-- 3f: Performance -->
+  <section>
+    <span class="phase-badge p3">Phase 3f</span>
+    <h2>Performance: What the Numbers Say</h2>
+    <p class="subtitle">Datapath architecture drives the differences</p>
+    <div class="compare-grid" style="margin-top:0.5em; font-size:0.68em;">
+      <div class="compare-card" style="padding:0.8em;">
+        <h4 style="color:var(--warn);">VLAN-Aware Bridge</h4>
+        <div class="diagram" style="margin:0.3em 0;">
+          <svg viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="280" height="55" rx="6" fill="#0d1a10" stroke="var(--success)" stroke-width="2"/>
+            <text x="150" y="32" class="label" text-anchor="middle" style="fill:var(--success); font-size:13px;">Kernel only</text>
+            <text x="150" y="52" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">VLAN: O(1) bitmap &middot; FDB: hash table</text>
+          </svg>
+        </div>
+        <p>Pure kernel fast path. VLAN classification is a bitmap &mdash; zero per-packet cost regardless of VLAN count. No userspace component.</p>
+      </div>
+      <div class="compare-card" style="padding:0.8em;">
+        <h4 style="color:var(--accent2);">OVS</h4>
+        <div class="diagram" style="margin:0.3em 0;">
+          <svg viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
+            <rect x="10" y="10" width="280" height="25" rx="4" fill="#2a1a10" stroke="var(--accent2)" stroke-width="1.5"/>
+            <text x="150" y="27" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Slow path: ovs-vswitchd (10–50 µs upcall)</text>
+            <rect x="10" y="42" width="280" height="25" rx="4" fill="#0d1a10" stroke="var(--success)" stroke-width="1.5"/>
+            <text x="150" y="59" class="label-sm" text-anchor="middle" style="fill:var(--success);">Fast path: kernel megaflow cache</text>
+          </svg>
+        </div>
+        <p>Two-tier. Cached flows are fast; cache misses trigger userspace upcall. <strong style="color:var(--accent2);">Latency is bimodal.</strong></p>
+      </div>
+    </div>
+    <span class="lab-ref">Lab guide: Section 3f</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p3">Phase 3f</span>
+    <h2>Performance Results</h2>
+    <table style="font-size:0.58em; margin-top:0.5em;">
+      <tr>
+        <th>Metric</th>
+        <th style="color:var(--warn);">VLAN-aware bridge</th>
+        <th style="color:var(--accent2);">OVS (cached)</th>
+        <th style="color:var(--danger);">OVS (miss)</th>
+      </tr>
+      <tr>
+        <td>Median RTT</td>
+        <td>~15–25 µs</td>
+        <td>~18–30 µs</td>
+        <td style="color:var(--danger);">~60–150 µs</td>
+      </tr>
+      <tr>
+        <td>P99 RTT</td>
+        <td>~30–50 µs</td>
+        <td>~40–80 µs</td>
+        <td style="color:var(--danger);">~200–500 µs</td>
+      </tr>
+      <tr>
+        <td>P99.9 RTT</td>
+        <td>~50–80 µs</td>
+        <td style="color:var(--warn);">~80–200 µs</td>
+        <td style="color:var(--danger);">~500+ µs</td>
+      </tr>
+    </table>
+    <table style="font-size:0.58em; margin-top:0.6em;">
+      <tr>
+        <th>Dimension</th>
+        <th style="color:var(--warn);">VLAN-aware bridge</th>
+        <th style="color:var(--accent2);">OVS</th>
+      </tr>
+      <tr>
+        <td>Throughput (1500 B frames)</td>
+        <td>Baseline</td>
+        <td style="color:var(--success);">~same (within noise)</td>
+      </tr>
+      <tr>
+        <td>Small-packet UDP PPS (64 B)</td>
+        <td>Baseline</td>
+        <td style="color:var(--warn);">5–15% lower</td>
+      </tr>
+      <tr>
+        <td>CPU per Gbps</td>
+        <td>Lower</td>
+        <td style="color:var(--warn);">~10–20% higher</td>
+      </tr>
+      <tr>
+        <td>Memory footprint</td>
+        <td>Kernel-only, minimal</td>
+        <td style="color:var(--warn);">+50–200 MB userspace</td>
+      </tr>
+      <tr>
+        <td>VLAN scaling (100+)</td>
+        <td style="color:var(--success);">Zero cost (bitmap)</td>
+        <td>More megaflow entries</td>
+      </tr>
+    </table>
+    <span class="lab-ref">Lab guide: Section 3f</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p3">Phase 3f</span>
+    <h2>Performance → Decision Impact</h2>
+    <div class="punchline" style="margin-top:0.8em; font-size:0.8em;">
+      At typical firewall VM scale (&lt; 50 VMs, &lt; 100 VLANs), throughput and latency differences are <strong style="color:var(--success);">negligible</strong>. Choose based on operability, not performance.
+    </div>
+    <div style="margin-top:1em; font-size:0.72em;">
+      <table>
+        <tr>
+          <th>Workload profile</th>
+          <th>Performance says&hellip;</th>
+        </tr>
+        <tr>
+          <td>Firewall VM, typical enterprise traffic</td>
+          <td style="color:var(--success);">Gap is noise. Pick OVS for operability.</td>
+        </tr>
+        <tr>
+          <td>High PPS, small packets (telco, NFV)</td>
+          <td style="color:var(--warn);">Bridge wins 5–15% PPS. Consider SR-IOV.</td>
+        </tr>
+        <tr>
+          <td>Latency-sensitive (finance, HFT)</td>
+          <td style="color:var(--danger);">P99.9 tail matters. Bridge or SR-IOV.</td>
+        </tr>
+        <tr>
+          <td>100+ VLANs, 1000+ flows</td>
+          <td style="color:var(--warn);">Monitor OVS megaflow cache &amp; upcall rate.</td>
+        </tr>
+        <tr>
+          <td>Minimal resource budget</td>
+          <td style="color:var(--warn);">Bridge: zero userspace daemons, kernel slab only.</td>
+        </tr>
+      </table>
+    </div>
+    <div class="takeaway" style="margin-top:0.6em; font-size:0.72em;">
+      <strong>Median is close, tails diverge.</strong> OVS latency is bimodal &mdash; cached flows are fast, megaflow misses produce spikes. The performance gap only becomes a factor at very high PPS or when P99.9 latency is a hard requirement.
+    </div>
+    <span class="lab-ref">Lab guide: Section 3f</span>
+  </section>
 </section>
 
 <!-- ============================================================ -->
@@ -1410,6 +1547,163 @@ ovs-appctl ofproto/trace ovsbr0 \
       </div>
     </div>
     <span class="lab-ref">Lab guide: Section 5e</span>
+  </section>
+
+  <!-- 5e-1: OVS CNI trunk -->
+  <section>
+    <span class="phase-badge p5">Phase 5e-1</span>
+    <h2>OVS CNI: Per-VM VLAN Trunks on OCP</h2>
+    <p class="subtitle">The bridge CNI trunk passes all VLANs &mdash; OVS CNI gives each VM its own allow-list</p>
+    <div class="diagram">
+      <svg viewBox="0 0 800 310" xmlns="http://www.w3.org/2000/svg">
+        <!-- OVS bridge on node -->
+        <rect x="80" y="150" width="640" height="48" class="ovs-box"/>
+        <text x="400" y="172" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:15px;">ovs-br1 (NMState-managed OVS bridge on each node)</text>
+        <text x="400" y="188" class="label-sm" text-anchor="middle">Per-port trunk lists enforced by OVS — same as Phase 3</text>
+
+        <!-- fw-dmz VM -->
+        <rect x="70" y="15" width="200" height="95" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="2"/>
+        <text x="170" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
+        <text x="170" y="56" class="label-sm" text-anchor="middle">eth1 — single trunk NIC</text>
+        <rect x="100" y="68" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
+        <text x="125" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
+        <rect x="158" y="68" width="50" height="18" rx="3" fill="var(--vlan200)" opacity="0.4"/>
+        <text x="183" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
+        <text x="170" y="104" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-dmz</text>
+        <line x1="170" y1="110" x2="170" y2="150" style="stroke:var(--warn); stroke-width:2.5;"/>
+
+        <!-- fw-internal VM -->
+        <rect x="310" y="15" width="200" height="95" rx="8" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="2"/>
+        <text x="410" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:13px;">fw-internal VM</text>
+        <text x="410" y="56" class="label-sm" text-anchor="middle">eth1 — single trunk NIC</text>
+        <rect x="345" y="68" width="50" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
+        <text x="370" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">123</text>
+        <rect x="403" y="68" width="50" height="18" rx="3" fill="var(--vlan150)" opacity="0.4"/>
+        <text x="428" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan150);">150</text>
+        <text x="410" y="104" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-internal</text>
+        <line x1="410" y1="110" x2="410" y2="150" style="stroke:var(--warn); stroke-width:2.5;"/>
+
+        <!-- monitor VM -->
+        <rect x="550" y="15" width="190" height="95" rx="8" fill="#10101a" stroke="var(--accent3)" stroke-width="2"/>
+        <text x="645" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">monitor VM</text>
+        <text x="645" y="56" class="label-sm" text-anchor="middle">eth1 — all VLANs</text>
+        <rect x="570" y="68" width="28" height="16" rx="2" fill="var(--vlan100)" opacity="0.4"/>
+        <rect x="602" y="68" width="28" height="16" rx="2" fill="var(--vlan200)" opacity="0.4"/>
+        <rect x="634" y="68" width="28" height="16" rx="2" fill="var(--vlan123)" opacity="0.4"/>
+        <rect x="666" y="68" width="28" height="16" rx="2" fill="var(--vlan150)" opacity="0.4"/>
+        <text x="645" y="104" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-all</text>
+        <line x1="645" y1="110" x2="645" y2="150" style="stroke:var(--accent3); stroke-width:2.5;"/>
+
+        <!-- Isolation X -->
+        <text x="290" y="45" class="label" text-anchor="middle" style="fill:var(--danger); font-size:18px;">✕</text>
+
+        <!-- Physical NIC -->
+        <rect x="330" y="220" width="140" height="30" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <text x="400" y="240" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (physical NIC)</text>
+        <line x1="400" y1="198" x2="400" y2="220" class="cable"/>
+
+        <!-- Key insight -->
+        <rect x="80" y="265" width="640" height="38" rx="6" fill="var(--bg-card)" stroke="#1e2844" stroke-width="1"/>
+        <text x="400" y="283" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">
+          OVS CNI <tspan style="fill:var(--accent2);">"trunk": [{"id": 100}, {"id": 200}]</tspan> → maps to
+          <tspan style="fill:var(--accent);">ovs-vsctl set port ... trunks=100,200</tspan>
+        </text>
+        <text x="400" y="298" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Each VM gets its own OVS port with its own VLAN allow-list — the Phase 3 model on Kubernetes</text>
+      </svg>
+    </div>
+    <span class="lab-ref">Lab guide: Section 5e-1</span>
+  </section>
+
+  <!-- OVS CNI trunk NAD detail -->
+  <section>
+    <span class="phase-badge p5">Phase 5e-1</span>
+    <h2>OVS CNI Trunk NADs</h2>
+    <p class="subtitle">One NAD per firewall role &mdash; different VLAN allow-lists</p>
+    <div class="compare-grid three" style="margin-top:0.5em; font-size:0.65em;">
+      <div class="compare-card" style="padding:0.7em; border-color:var(--danger);">
+        <h4 style="color:var(--danger); font-size:0.85em;">trunk-dmz</h4>
+        <pre style="font-size:0.85em; width:100%;"><code>"type": "ovs",
+"bridge": "ovs-br1",
+"trunk": [
+  { "id": 100 },
+  { "id": 200 }
+]</code></pre>
+        <p style="margin-top:0.3em;">fw-dmz sees <span class="chip v100">100</span> <span class="chip v200">200</span></p>
+      </div>
+      <div class="compare-card" style="padding:0.7em; border-color:var(--vlan123);">
+        <h4 style="color:var(--vlan123); font-size:0.85em;">trunk-internal</h4>
+        <pre style="font-size:0.85em; width:100%;"><code>"type": "ovs",
+"bridge": "ovs-br1",
+"trunk": [
+  { "id": 123 },
+  { "id": 150 }
+]</code></pre>
+        <p style="margin-top:0.3em;">fw-internal sees <span class="chip v123">123</span> <span class="chip v150">150</span></p>
+      </div>
+      <div class="compare-card" style="padding:0.7em; border-color:var(--accent3);">
+        <h4 style="color:var(--accent3); font-size:0.85em;">trunk-all</h4>
+        <pre style="font-size:0.85em; width:100%;"><code>"type": "ovs",
+"bridge": "ovs-br1",
+"trunk": [
+  { "minID": 1,
+    "maxID": 4094 }
+]</code></pre>
+        <p style="margin-top:0.3em;">monitor sees all VLANs</p>
+      </div>
+    </div>
+    <div style="font-size:0.7em; margin-top:0.6em;">
+      <p><strong>Day-2:</strong> Add VLAN 300 to fw-dmz → <code>oc edit nad trunk-dmz</code>, add <code>{"id": 300}</code> to trunk array. <strong style="color:var(--success);">No VM restart.</strong></p>
+      <p style="margin-top:0.2em;"><strong>Verify isolation:</strong> <code>oc debug node/&lt;n&gt; -- chroot /host ovs-appctl ofproto/trace ovs-br1 "in_port=&lt;fw-dmz-port&gt;,dl_vlan=123,..."</code> → <strong style="color:var(--danger);">drop</strong></p>
+    </div>
+    <span class="lab-ref">Lab guide: Section 5e-1</span>
+  </section>
+
+  <!-- Three-way comparison: Bridge CNI vs OVS CNI vs Localnet -->
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>Three Approaches to Firewall VM Trunks on OCP</h2>
+    <div class="compare-grid three" style="margin-top:0.5em; font-size:0.62em;">
+      <div class="compare-card warn" style="padding:0.7em;">
+        <h4 style="color:var(--warn); font-size:0.9em;">Bridge CNI trunk</h4>
+        <p><code>"vlan": 0</code></p>
+        <div style="margin:0.4em 0; padding:0.4em; background:var(--bg-card-alt); border-radius:4px;">
+          <strong>VM sees:</strong> All VLANs on one trunk NIC<br>
+          <strong>Per-VM filter:</strong> <span style="color:var(--danger);">No</span><br>
+          <strong>Day-2 add VLAN:</strong> N/A (all VLANs pass)<br>
+          <strong>NetworkPolicy:</strong> <span style="color:var(--danger);">No</span><br>
+          <strong>ofproto/trace:</strong> <span style="color:var(--danger);">No</span> (linux bridge)
+        </div>
+        <p style="color:var(--fg-dim);">Simple. All VMs on the bridge see the same VLANs.</p>
+      </div>
+      <div class="compare-card good" style="padding:0.7em;">
+        <h4 style="color:var(--success); font-size:0.9em;">OVS CNI trunk</h4>
+        <p><code>"trunk": [{"id": N}]</code></p>
+        <div style="margin:0.4em 0; padding:0.4em; background:var(--bg-card-alt); border-radius:4px;">
+          <strong>VM sees:</strong> One trunk NIC, tagged 802.1Q<br>
+          <strong>Per-VM filter:</strong> <span style="color:var(--success);">Yes</span> (per-NAD)<br>
+          <strong>Day-2 add VLAN:</strong> Edit NAD, <span style="color:var(--success);">no restart</span><br>
+          <strong>NetworkPolicy:</strong> <span style="color:var(--danger);">No</span> (bypasses OVN)<br>
+          <strong>ofproto/trace:</strong> <span style="color:var(--success);">Yes</span>
+        </div>
+        <p style="color:var(--success);">Best for firewall appliances expecting 802.1Q trunks.</p>
+      </div>
+      <div class="compare-card" style="padding:0.7em; border-color:var(--vlan150);">
+        <h4 style="color:var(--vlan150); font-size:0.9em;">Localnet per-VLAN</h4>
+        <p>One UDN per VLAN</p>
+        <div style="margin:0.4em 0; padding:0.4em; background:var(--bg-card-alt); border-radius:4px;">
+          <strong>VM sees:</strong> One NIC per VLAN, untagged<br>
+          <strong>Per-VM filter:</strong> <span style="color:var(--success);">Yes</span> (which UDNs attached)<br>
+          <strong>Day-2 add VLAN:</strong> New UDN + VM spec, <span style="color:var(--warn);">restart</span><br>
+          <strong>NetworkPolicy:</strong> <span style="color:var(--success);">Yes</span> (OVN enforces)<br>
+          <strong>ofproto/trace:</strong> <span style="color:var(--success);">Yes</span> (OVN flows)
+        </div>
+        <p style="color:var(--vlan150);">Best when VM doesn't need tags or you want per-VLAN policy.</p>
+      </div>
+    </div>
+    <div class="takeaway" style="margin-top:0.4em; font-size:0.68em;">
+      For firewall VMs expecting a standard 802.1Q trunk, <strong>OVS CNI is the right choice</strong>. Localnet-per-VLAN is better when you want OVN NetworkPolicy enforcement on each VLAN individually.
+    </div>
+    <span class="lab-ref">Lab guide: Sections 5e-1, 5e-2, 5f</span>
   </section>
 </section>
 

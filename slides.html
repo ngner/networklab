@@ -1719,17 +1719,27 @@ ovs-appctl ofproto/trace ovsbr0 \
   <!-- Use case matrix -->
   <section>
     <h2>Use Case → Best Construct</h2>
-    <table style="font-size:0.6em; margin-top:0.8em;">
+    <table style="font-size:0.55em; margin-top:0.5em;">
       <tr><th>Use Case</th><th>Best Construct</th><th>Why</th></tr>
       <tr>
         <td>Firewall VM, static VLANs</td>
         <td style="color:var(--warn);">VLAN-aware bridge + bridge CNI</td>
-        <td>Simplest, lowest latency</td>
+        <td>Simplest, lowest latency, no OVS needed</td>
       </tr>
       <tr>
-        <td>Firewall VM, dynamic/heterogeneous VLANs</td>
-        <td style="color:var(--accent2);">OVS trunk + OVS CNI or OVN localnet</td>
-        <td>Declarative, persisted, verifiable</td>
+        <td>Firewall VM, dynamic VLANs</td>
+        <td style="color:var(--accent2);">OVS CNI trunk NAD</td>
+        <td>Per-VM 802.1Q trunk — what appliances expect</td>
+      </tr>
+      <tr>
+        <td>Tenant workload VMs behind firewall</td>
+        <td style="color:var(--vlan150);">UDN Localnet (one per VLAN)</td>
+        <td>Untagged NIC, OVN-managed, NetworkPolicy</td>
+      </tr>
+      <tr style="background:rgba(108,140,255,0.08);">
+        <td><strong>Firewall + tenants at scale</strong></td>
+        <td style="color:var(--accent3);"><strong>Hybrid:</strong> OVS CNI trunk + Localnet UDN</td>
+        <td>Both on same OVS bridge — see next slides</td>
       </tr>
       <tr>
         <td>Direct L2 to physical network</td>
@@ -1781,12 +1791,155 @@ ovs-appctl ofproto/trace ovsbr0 \
         </div>
         <div class="answer-card blue" style="padding:0.7em 1em;">
           <h3 style="font-size:1.1em;">At Scale</h3>
-          <p style="font-size:0.6em; color:var(--fg-dim); margin-top:0.3em;">UDN localnet via OVN-Kubernetes</p>
-          <p style="font-size:0.55em; color:var(--accent3); margin-top:0.2em;">Trunk + NetworkPolicy + K8s API</p>
+          <p style="font-size:0.6em; color:var(--fg-dim); margin-top:0.3em;">It's a <strong>hybrid</strong> — not one construct</p>
+          <p style="font-size:0.5em; color:var(--accent2); margin-top:0.15em;">Firewall VM: OVS CNI trunk (802.1Q)</p>
+          <p style="font-size:0.5em; color:var(--vlan150); margin-top:0.1em;">Tenant VMs: Localnet UDN (NetworkPolicy)</p>
+          <p style="font-size:0.45em; color:var(--accent3); margin-top:0.15em;">Both share the same OVS bridge on each node</p>
         </div>
       </div>
     </div>
     <span class="lab-ref">Lab guide: The Punchline</span>
+  </section>
+
+  <!-- At-scale hybrid detail -->
+  <section>
+    <h2>At Scale: The Hybrid Model</h2>
+    <p class="subtitle">Two constructs, one OVS bridge — firewall gets trunk, tenants get policy</p>
+    <div class="diagram">
+      <svg viewBox="0 0 800 370" xmlns="http://www.w3.org/2000/svg">
+        <!-- OCP Node boundary -->
+        <rect x="20" y="8" width="760" height="355" rx="12" fill="none" stroke="var(--fg-dim)" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="400" y="28" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
+
+        <!-- Policy boundary: OVN-managed zone -->
+        <rect x="310" y="38" width="440" height="155" rx="8" fill="rgba(108,140,255,0.05)" stroke="var(--accent3)" stroke-width="1.5" stroke-dasharray="5 3"/>
+        <text x="530" y="55" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:10px;">OVN-managed — NetworkPolicy enforced here</text>
+
+        <!-- Firewall VM (outside OVN zone) -->
+        <rect x="40" y="42" width="230" height="145" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="2"/>
+        <text x="155" y="65" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">fw-dmz VM</text>
+        <text x="155" y="83" class="label-sm" text-anchor="middle">Firewall appliance</text>
+        <text x="155" y="103" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">eth1: 802.1Q trunk</text>
+        <rect x="72" y="112" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
+        <text x="97" y="125" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
+        <rect x="130" y="112" width="50" height="18" rx="3" fill="var(--vlan200)" opacity="0.4"/>
+        <text x="155" y="125" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
+        <text x="155" y="152" class="label-code" text-anchor="middle" style="font-size:10px;">OVS CNI trunk NAD</text>
+        <text x="155" y="170" class="label-sm" text-anchor="middle" style="fill:var(--danger); font-size:9px;">NetworkPolicy: ✕ (bypasses OVN)</text>
+        <text x="155" y="183" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:9px;">Policy point: the appliance itself</text>
+
+        <!-- Tenant A VM (inside OVN zone) -->
+        <rect x="330" y="65" width="190" height="120" rx="8" fill="#0d1828" stroke="var(--vlan100)" stroke-width="2"/>
+        <text x="425" y="88" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">app-vm (tenant-a)</text>
+        <text x="425" y="106" class="label-sm" text-anchor="middle">eth1: VLAN 100 untagged</text>
+        <text x="425" y="126" class="label-code" text-anchor="middle" style="font-size:10px;">Localnet UDN phys-vlan100</text>
+        <text x="425" y="148" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: ✓ (OVN enforces)</text>
+        <text x="425" y="163" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:9px;">East-west segmentation within VLAN</text>
+
+        <!-- Tenant B VM (inside OVN zone) -->
+        <rect x="550" y="65" width="190" height="120" rx="8" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2"/>
+        <text x="645" y="88" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">db-vm (tenant-b)</text>
+        <text x="645" y="106" class="label-sm" text-anchor="middle">eth1: VLAN 200 untagged</text>
+        <text x="645" y="126" class="label-code" text-anchor="middle" style="font-size:10px;">Localnet UDN phys-vlan200</text>
+        <text x="645" y="148" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: ✓ (OVN enforces)</text>
+        <text x="645" y="163" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:9px;">East-west segmentation within VLAN</text>
+
+        <!-- Connection lines down to OVS bridge -->
+        <line x1="155" y1="187" x2="155" y2="230" style="stroke:var(--accent2); stroke-width:2.5;"/>
+        <line x1="425" y1="185" x2="425" y2="230" style="stroke:var(--vlan100); stroke-width:2.5;"/>
+        <line x1="645" y1="185" x2="645" y2="230" style="stroke:var(--vlan200); stroke-width:2.5;"/>
+
+        <!-- Cross-VLAN arrow through firewall -->
+        <path d="M 425 195 L 290 195 L 155 190" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 3"/>
+        <text x="290" y="210" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:8px;">cross-VLAN → must traverse firewall</text>
+
+        <!-- OVS bridge -->
+        <rect x="60" y="230" width="680" height="44" class="ovs-box"/>
+        <text x="400" y="250" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:14px;">ovs-br1 (shared OVS bridge)</text>
+        <text x="400" y="265" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OVS CNI ports + OVN localnet port bindings coexist</text>
+
+        <!-- Physical NIC -->
+        <line x1="400" y1="274" x2="400" y2="300" class="cable"/>
+        <rect x="310" y="300" width="180" height="30" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <text x="400" y="320" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (physical uplink)</text>
+
+        <!-- ToR -->
+        <line x1="400" y1="330" x2="400" y2="350" class="cable"/>
+        <text x="400" y="362" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Physical switch / datacenter fabric</text>
+      </svg>
+    </div>
+    <span class="lab-ref">Lab guide: At Scale with Firewalls</span>
+  </section>
+
+  <!-- Policy boundaries: who enforces what -->
+  <section>
+    <h2>Policy Boundaries in the Hybrid Model</h2>
+    <p class="subtitle">NetworkPolicy covers the tenant side — the firewall covers everything else</p>
+    <div class="diagram" style="margin-top:0.3em;">
+      <svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
+        <!-- Three traffic flow lanes -->
+        <!-- Lane 1: East-west within VLAN -->
+        <rect x="20" y="10" width="240" height="230" rx="8" fill="rgba(76,195,138,0.06)" stroke="var(--success)" stroke-width="1.5"/>
+        <text x="140" y="32" class="label" text-anchor="middle" style="fill:var(--success); font-size:12px;">Within VLAN (east-west)</text>
+        <rect x="40" y="48" width="80" height="40" rx="6" fill="#0d1828" stroke="var(--vlan100)" stroke-width="1.5"/>
+        <text x="80" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">app-vm A</text>
+        <rect x="160" y="48" width="80" height="40" rx="6" fill="#0d1828" stroke="var(--vlan100)" stroke-width="1.5"/>
+        <text x="200" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">app-vm B</text>
+        <path d="M 120 68 L 160 68" fill="none" stroke="var(--success)" stroke-width="2" marker-end="url(#arrowGreen)"/>
+        <text x="140" y="108" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:10px;">OVN NetworkPolicy</text>
+        <text x="140" y="122" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">enforces allow/deny</text>
+        <rect x="35" y="140" width="190" height="55" rx="4" fill="var(--bg-card)" stroke="var(--success)" stroke-width="1" stroke-dasharray="3 2"/>
+        <text x="130" y="158" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Localnet UDN → OVN ACLs</text>
+        <text x="130" y="172" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:10px;">Micro-segmentation: who can</text>
+        <text x="130" y="185" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:10px;">talk to whom within a VLAN</text>
+        <text x="140" y="215" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Standard K8s NetworkPolicy</text>
+        <text x="140" y="228" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">YAML — OVN translates to flows</text>
+
+        <!-- Lane 2: Cross-VLAN (inter-VLAN) -->
+        <rect x="280" y="10" width="240" height="230" rx="8" fill="rgba(230,160,60,0.06)" stroke="var(--warn)" stroke-width="1.5"/>
+        <text x="400" y="32" class="label" text-anchor="middle" style="fill:var(--warn); font-size:12px;">Cross-VLAN (inter-VLAN)</text>
+        <rect x="300" y="48" width="80" height="40" rx="6" fill="#0d1828" stroke="var(--vlan100)" stroke-width="1.5"/>
+        <text x="340" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">VLAN 100</text>
+        <rect x="420" y="48" width="80" height="40" rx="6" fill="#0d1018" stroke="var(--vlan200)" stroke-width="1.5"/>
+        <text x="460" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan200);">VLAN 200</text>
+        <path d="M 380 68 L 393 68" fill="none" stroke="var(--danger)" stroke-width="2"/>
+        <text x="400" y="72" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">✕</text>
+        <path d="M 407 68 L 420 68" fill="none" stroke="var(--danger)" stroke-width="2"/>
+        <text x="400" y="108" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:10px;">No direct path</text>
+        <text x="400" y="122" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">must route through firewall</text>
+        <rect x="340" y="140" width="120" height="55" rx="4" fill="#1a0d10" stroke="var(--danger)" stroke-width="1.5"/>
+        <text x="400" y="158" class="label-sm" text-anchor="middle" style="fill:var(--danger); font-size:10px;">fw-dmz VM</text>
+        <text x="400" y="172" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Trunk: 100 + 200</text>
+        <text x="400" y="185" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:9px;">Routes between VLANs</text>
+        <text x="400" y="215" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Appliance firewall rules</text>
+        <text x="400" y="228" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">OVN has no visibility here</text>
+
+        <!-- Lane 3: North-south -->
+        <rect x="540" y="10" width="240" height="230" rx="8" fill="rgba(108,140,255,0.06)" stroke="var(--accent3)" stroke-width="1.5"/>
+        <text x="660" y="32" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">North-South (ingress/egress)</text>
+        <rect x="600" y="48" width="120" height="40" rx="6" fill="#1a0d10" stroke="var(--danger)" stroke-width="1.5"/>
+        <text x="660" y="72" class="label-sm" text-anchor="middle" style="fill:var(--danger);">fw-dmz VM</text>
+        <line x1="660" y1="88" x2="660" y2="120" style="stroke:var(--accent3); stroke-width:2;"/>
+        <rect x="600" y="120" width="120" height="30" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1"/>
+        <text x="660" y="140" class="label-sm" text-anchor="middle" style="fill:#fff; font-size:10px;">Physical network</text>
+        <text x="660" y="170" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:10px;">Firewall controls what</text>
+        <text x="660" y="184" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:10px;">enters/leaves the cluster</text>
+        <text x="660" y="215" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">NAT, ACLs, IPS/IDS</text>
+        <text x="660" y="228" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">on the appliance</text>
+
+        <!-- Arrow defs -->
+        <defs>
+          <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
+            <path d="M 0 0 L 8 3 L 0 6 z" fill="var(--success)"/>
+          </marker>
+        </defs>
+      </svg>
+    </div>
+    <div class="takeaway" style="margin-top:0.2em; font-size:0.62em;">
+      <strong>"Trunk + NetworkPolicy"</strong> means NetworkPolicy on the <em>tenant</em> side (localnet UDNs), not on the firewall trunk.
+      The firewall itself is the policy enforcement point for inter-VLAN and north-south traffic.
+    </div>
+    <span class="lab-ref">Lab guide: At Scale with Firewalls</span>
   </section>
 
   <!-- Thank you / lab pointer -->

@@ -1913,7 +1913,225 @@ in a comparison table with your observations:
 >   updatable, and verifiable without generating traffic. The marginal latency
 >   cost is irrelevant next to the operational cost of managing heterogeneous
 >   VLAN assignments with `bridge vlan` commands and custom persistence scripts.
-> - **At scale with OVN-Kubernetes** → OVS is non-negotiable. UDN with
->   `localnet` topology exposes physical VLANs to KubeVirt VMs through OVN
->   logical ports, giving trunk capability + NetworkPolicy + central management
->   through the Kubernetes API.
+> - **At scale with OVN-Kubernetes** → It's a hybrid. Firewall VMs use **OVS
+>   CNI trunk** NADs (802.1Q trunk on a single NIC — what the appliance
+>   expects). Tenant workload VMs use **UDN localnet** (one untagged NIC per
+>   VLAN, OVN-managed). Both attachment types share the same OVS bridge on the
+>   node, and the Kubernetes API manages all of it.
+
+### At Scale with Firewalls — How the Pieces Compose
+
+The "At Scale" answer is not a single construct — it's two constructs working
+together on the same OVS bridge:
+
+```
+  ┌─────────────────────────────────────────────────────────┐
+  │                    OCP Node                             │
+  │                                                         │
+  │  ┌─────────────┐   ┌─────────────┐   ┌──────────────┐  │
+  │  │  fw-dmz VM  │   │ tenant-a VM │   │ tenant-b VM  │  │
+  │  │  (firewall) │   │ (workload)  │   │ (workload)   │  │
+  │  │             │   │             │   │              │  │
+  │  │ eth1: trunk │   │ eth1: VLAN  │   │ eth1: VLAN   │  │
+  │  │  100,200    │   │  100 untag  │   │  200 untag   │  │
+  │  └──────┬──────┘   └──────┬──────┘   └──────┬───────┘  │
+  │         │                 │                  │          │
+  │    OVS CNI           Localnet UDN       Localnet UDN   │
+  │    trunk NAD         phys-vlan100       phys-vlan200    │
+  │         │                 │                  │          │
+  │  ┌──────┴─────────────────┴──────────────────┴───────┐  │
+  │  │                   ovs-br1                         │  │
+  │  │              (shared OVS bridge)                  │  │
+  │  └──────────────────────┬────────────────────────────┘  │
+  │                         │                               │
+  │                       ens4                              │
+  │                  (physical uplink)                      │
+  └─────────────────────────┴───────────────────────────────┘
+```
+
+**Why this hybrid, not one or the other:**
+
+| | Firewall VM | Tenant workload VM |
+|---|---|---|
+| What the VM expects | Single 802.1Q trunk NIC | Simple untagged NIC |
+| Attachment | OVS CNI trunk NAD | Localnet UDN |
+| VLAN filtering | Per-NAD `trunk` array | Per-UDN `vlan` field |
+| NetworkPolicy | Not enforced (bypasses OVN) | Enforced by OVN |
+| Policy enforcement point | The firewall appliance itself | OVN ACLs + the firewall |
+
+NetworkPolicy applies to the **tenant side**, not the firewall trunk. Traffic
+between tenant VMs on different VLANs must traverse the firewall — it's the
+firewall that decides what crosses VLAN boundaries, not OVN. OVN's role is
+east-west micro-segmentation *within* each VLAN (e.g., restricting which
+tenant-a pods can talk to each other).
+
+**Exercise — Hybrid deployment.** Deploy all three VMs on the same cluster:
+
+1. Create the OVS bridge (`ovs-br1`) via NMState NNCP (section 5e-1).
+
+2. Create the OVS CNI trunk NAD for the firewall:
+
+```yaml
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: trunk-dmz
+  namespace: firewall-vms
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "type": "ovs",
+      "bridge": "ovs-br1",
+      "trunk": [
+        { "id": 100 },
+        { "id": 200 }
+      ]
+    }
+```
+
+3. Create localnet UDNs for each tenant VLAN (section 5e-2):
+
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: phys-vlan100
+  namespace: tenant-a
+spec:
+  topology: Localnet
+  localnet:
+    role: Secondary
+    subnets:
+      - cidr: 10.0.100.0/24
+    physicalNetworkName: physnet1
+    vlan: 100
+---
+apiVersion: k8s.ovn.org/v1
+kind: UserDefinedNetwork
+metadata:
+  name: phys-vlan200
+  namespace: tenant-b
+spec:
+  topology: Localnet
+  localnet:
+    role: Secondary
+    subnets:
+      - cidr: 10.0.200.0/24
+    physicalNetworkName: physnet1
+    vlan: 200
+```
+
+4. Deploy the firewall VM (OVS CNI trunk) and two tenant VMs (localnet UDN):
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fw-dmz
+  namespace: firewall-vms
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: trunk
+              bridge: {}
+        resources:
+          requests:
+            memory: 2Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: trunk
+          multus:
+            networkName: firewall-vms/trunk-dmz
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: app-vm
+  namespace: tenant-a
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: vlan100
+              bridge: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: vlan100
+          multus:
+            networkName: tenant-a/phys-vlan100
+---
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: db-vm
+  namespace: tenant-b
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: vlan200
+              bridge: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: vlan200
+          multus:
+            networkName: tenant-b/phys-vlan200
+```
+
+5. Verify the three different attachment types coexist on the same OVS bridge:
+
+```bash
+oc debug node/<node> -- chroot /host ovs-vsctl show
+# Expect: ovs-br1 with ports for fw-dmz (trunks=100,200),
+#         localnet-mapped ports for tenant-a and tenant-b
+```
+
+6. Verify the firewall sees tagged trunk frames:
+
+```bash
+virtctl console fw-dmz
+ip link add link eth1 name eth1.100 type vlan id 100
+ip addr add 10.0.100.254/24 dev eth1.100
+ip link set eth1.100 up
+tcpdump -e -i eth1   # should see 802.1Q tags
+```
+
+7. Verify tenant VMs see untagged frames and have NetworkPolicy:
+
+```bash
+virtctl console app-vm
+ip addr show eth1     # 10.0.100.x, no VLAN sub-interfaces needed
+
+# Apply a NetworkPolicy in tenant-a namespace and verify it takes effect
+# (this would NOT work on the firewall VM's trunk — OVS CNI bypasses OVN)
+```
+
+8. Confirm that `app-vm` (VLAN 100) and `db-vm` (VLAN 200) cannot reach each
+   other directly — they're on different VLANs with no OVN router between
+   them. Cross-VLAN traffic must go through `fw-dmz`.

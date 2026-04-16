@@ -2,10 +2,12 @@
 
 ## Goal
 
-Build hands-on knowledge of native Linux networking constructs (linux bridge,
-macvlan, ipvlan, OVS, OVN) so you can consult on the best network architecture
-for KubeVirt VMs — specifically firewall VMs with VLAN trunks — in
-OVN-Kubernetes environments (Multus, UDN).
+Build hands-on knowledge of Linux networking constructs (linux bridge,
+macvlan, ipvlan) and OVN-Kubernetes abstractions (UDN, Localnet CUDN) so you
+can consult on the best network architecture for KubeVirt VMs — specifically
+firewall VMs with VLAN trunks — in OpenShift environments. The workshop
+covers four deployment models, each suited to different constraints around
+NIC count, VLAN scale, appliance compatibility, and policy requirements.
 
 ## Lab Environment
 
@@ -328,114 +330,38 @@ ip netns del iv-a; ip netns del iv-b
 
 ---
 
-## Phase 2: Open vSwitch (OVS)
+## Phase 2: OVS & OVN Background
 
-OVS is a programmable software switch that replaces (or sits alongside) Linux
-bridges. On its own it's useful — trunk ports, mirrors, flow-based forwarding —
-but the real reason to learn it here is that **OVS is the datapath for
-OVN-Kubernetes**, which is the default CNI in OpenShift.
+You do not configure OVS directly on OpenShift nodes. OVN-Kubernetes owns the
+OVS datapath — it creates `br-int` (integration bridge) and `br-ex` (external
+bridge) on every node and programs OpenFlow rules to implement pod networking,
+NetworkPolicy, and services.
 
-On every OCP node, OVN-Kubernetes creates an OVS bridge called `br-int`
-(integration bridge) and programs OpenFlow rules into it to implement pod
-networking, NetworkPolicy, and services. When you run `ovs-ofctl dump-flows
-br-int` on an OCP node, you're looking at the same flow tables you'll learn
-to read in this phase.
+What matters for this workshop:
 
-The connection to what comes later in Phase 5:
-
-- **Multus secondary networks** that use the OVS CNI plugin create ports on
-  an OVS bridge on the node — the same `ovs-vsctl add-port` with `tag=` or
-  `trunks=` you'll use below.
-- **UDN (User Defined Networks)** with **localnet topology** maps an OVN
-  logical switch to a physical network by creating a `localnet` port that
-  bridges OVN's overlay onto a node-local OVS bridge. That bridge has a
-  physical NIC (or VLAN subinterface) as its uplink — the exact pattern you
-  build in this phase with `ovsbr0` and `dummy0`.
-- **OVN** (Phase 4) adds the logical control plane on top: logical switches,
-  routers, and ACLs that get compiled down into OVS flows. Understanding OVS
-  flows first means you can debug OVN-Kubernetes problems by reading the
-  datapath directly.
-
-Everything in this phase maps 1:1 to real OCP node networking — the bridge
-name and scale differ, but the mechanics are identical.
-
-### 2a. Install and Basic Bridge
+- **Localnet UDN** maps an OVN logical switch to a physical network by
+  creating a `localnet` port on an **OVS bridge** configured via NMState
+  `bridge-mappings`. OVN handles VLAN tagging (access mode) and all
+  forwarding logic — you declare a `ClusterUserDefinedNetwork` and OVN
+  programs the datapath.
+- **Bridge CNI** (`vlanTrunk`) uses a **Linux bridge** — the same kernel
+  construct from Phase 1. It does not touch OVS at all.
+- For debugging OVN-programmed flows on a node:
 
 ```bash
-dnf install -y openvswitch libibverbs
-systemctl enable --now openvswitch
-
-ovs-vsctl add-br ovsbr0
-ovs-vsctl add-port ovsbr0 dummy0
-```
-
-### 2b. OVS VLAN Ports with Namespaces
-
-```bash
-# Create namespaces and veth pairs
-for ns in ovs-a ovs-b ovs-c; do
-  ip netns add $ns
-  ip link add veth-${ns} type veth peer name veth-${ns}-br
-  ip link set veth-${ns} netns $ns
-  ip link set veth-${ns}-br up
-done
-
-# Access port: VLAN 100
-ovs-vsctl add-port ovsbr0 veth-ovs-a-br -- set port veth-ovs-a-br tag=100
-ip netns exec ovs-a ip addr add 10.0.100.1/24 dev veth-ovs-a
-ip netns exec ovs-a ip link set veth-ovs-a up
-
-# Access port: VLAN 200
-ovs-vsctl add-port ovsbr0 veth-ovs-b-br -- set port veth-ovs-b-br tag=200
-ip netns exec ovs-b ip addr add 10.0.200.1/24 dev veth-ovs-b
-ip netns exec ovs-b ip link set veth-ovs-b up
-
-# Trunk port: VLANs 100 + 200 (firewall guest)
-ovs-vsctl add-port ovsbr0 veth-ovs-c-br -- set port veth-ovs-c-br trunks=100,200
-ip netns exec ovs-c ip link set veth-ovs-c up
-ip netns exec ovs-c ip link add link veth-ovs-c name veth-ovs-c.100 type vlan id 100
-ip netns exec ovs-c ip addr add 10.0.100.254/24 dev veth-ovs-c.100
-ip netns exec ovs-c ip link set veth-ovs-c.100 up
-ip netns exec ovs-c ip link add link veth-ovs-c name veth-ovs-c.200 type vlan id 200
-ip netns exec ovs-c ip addr add 10.0.200.254/24 dev veth-ovs-c.200
-ip netns exec ovs-c ip link set veth-ovs-c.200 up
-
-# Test: access guest on VLAN 100 can reach trunk guest's .100 sub-interface
-ip netns exec ovs-a ping -c 2 10.0.100.254
-
-# Test: access guest on VLAN 200 can reach trunk guest's .200 sub-interface
-ip netns exec ovs-b ping -c 2 10.0.200.254
-
-# Test: VLAN 100 guest cannot reach VLAN 200 guest directly
-ip netns exec ovs-a ping -c 2 10.0.200.1  # fails
-```
-
-### 2c. OVS Flows and Debugging
-
-```bash
-# See all flows
-ovs-ofctl dump-flows ovsbr0
-
-# Trace a specific packet through the pipeline
-ovs-appctl ofproto/trace ovsbr0 \
-  "in_port=veth-ovs-c-br,dl_vlan=100,dl_src=aa:bb:cc:dd:ee:01,dl_dst=ff:ff:ff:ff:ff:ff"
-
-# Show port configuration
-ovs-vsctl list port veth-ovs-c-br
-```
-
-```bash
-# Cleanup
-for ns in ovs-a ovs-b ovs-c; do ip netns del $ns; done
-ovs-vsctl del-br ovsbr0
+oc debug node/<node> -- chroot /host ovs-ofctl dump-flows br-int
+oc debug node/<node> -- chroot /host ovs-vsctl show
 ```
 
 ---
 
-## Phase 3: Trunk-to-Guest — OVS vs Bridge Side-by-Side
+## Phase 3: Trunk-to-Guest — Linux Bridge VLAN Filtering
 
-This is the core comparison for KubeVirt firewall VM consultation. Build both
-approaches with the **same heterogeneous guest scenario** and compare.
+This is the core hands-on section for KubeVirt firewall VM consultation. The
+VLAN-aware Linux bridge with per-port filtering is the kernel primitive behind
+the **Bridge CNI `vlanTrunk`** feature used on OpenShift (Phase 5). Build the
+scenario below and understand how per-port VLAN allow-lists work before moving
+to the Kubernetes abstractions.
 
 ### Test Scenario: Four Guests, Different VLAN Sets
 
@@ -448,7 +374,7 @@ approaches with the **same heterogeneous guest scenario** and compare.
 
 ### 3a. Helper: Create Namespaces and veth Pairs
 
-Run this once — both the bridge and OVS setups use the same namespaces.
+Run this once — the bridge setups below reuse the same namespaces.
 
 ```bash
 for ns in fw-dmz fw-internal monitor tenant-a; do
@@ -456,8 +382,7 @@ for ns in fw-dmz fw-internal monitor tenant-a; do
 done
 ```
 
-For each test (bridge then OVS), create fresh veth pairs, run the exercises,
-then clean up the veths before switching to the other datapath.
+For each test, create fresh veth pairs, run the exercises, then clean up.
 
 ### 3b. VLAN-Unaware Bridge (per-bridge model)
 
@@ -589,95 +514,10 @@ ip link del br-trunk 2>/dev/null
 nft delete table bridge filter 2>/dev/null
 ```
 
-### 3d. OVS Setup
+### 3d. Lab Exercises
 
-```bash
-ovs-vsctl add-br ovsbr0
-ovs-vsctl add-port ovsbr0 dummy0
-
-# --- fw-dmz: trunk VLANs 100, 200 ---
-ip link add veth-dmz type veth peer name veth-dmz-br
-ip link set veth-dmz netns fw-dmz
-ip link set veth-dmz-br up
-ovs-vsctl add-port ovsbr0 veth-dmz-br -- set port veth-dmz-br trunks=100,200
-
-ip netns exec fw-dmz ip link set veth-dmz up
-ip netns exec fw-dmz ip link add link veth-dmz name veth-dmz.100 type vlan id 100
-ip netns exec fw-dmz ip addr add 10.0.100.1/24 dev veth-dmz.100
-ip netns exec fw-dmz ip link set veth-dmz.100 up
-ip netns exec fw-dmz ip link add link veth-dmz name veth-dmz.200 type vlan id 200
-ip netns exec fw-dmz ip addr add 10.0.200.1/24 dev veth-dmz.200
-ip netns exec fw-dmz ip link set veth-dmz.200 up
-
-# --- fw-internal: trunk VLANs 123, 150 ---
-ip link add veth-int type veth peer name veth-int-br
-ip link set veth-int netns fw-internal
-ip link set veth-int-br up
-ovs-vsctl add-port ovsbr0 veth-int-br -- set port veth-int-br trunks=123,150
-
-ip netns exec fw-internal ip link set veth-int up
-ip netns exec fw-internal ip link add link veth-int name veth-int.123 type vlan id 123
-ip netns exec fw-internal ip addr add 10.0.123.1/24 dev veth-int.123
-ip netns exec fw-internal ip link set veth-int.123 up
-ip netns exec fw-internal ip link add link veth-int name veth-int.150 type vlan id 150
-ip netns exec fw-internal ip addr add 10.0.150.1/24 dev veth-int.150
-ip netns exec fw-internal ip link set veth-int.150 up
-
-# --- monitor: trunk all VLANs ---
-ip link add veth-mon type veth peer name veth-mon-br
-ip link set veth-mon netns monitor
-ip link set veth-mon-br up
-ovs-vsctl add-port ovsbr0 veth-mon-br \
-  -- set port veth-mon-br trunks=100,123,150,200
-
-ip netns exec monitor ip link set veth-mon up
-for vid in 100 123 150 200; do
-  ip netns exec monitor ip link add link veth-mon name veth-mon.${vid} type vlan id $vid
-  ip netns exec monitor ip addr add 10.0.${vid}.254/24 dev veth-mon.${vid}
-  ip netns exec monitor ip link set veth-mon.${vid} up
-done
-
-# --- tenant-a: access port, VLAN 100 ---
-ip link add veth-tena type veth peer name veth-tena-br
-ip link set veth-tena netns tenant-a
-ip link set veth-tena-br up
-ovs-vsctl add-port ovsbr0 veth-tena-br -- set port veth-tena-br tag=100
-
-ip netns exec tenant-a ip addr add 10.0.100.10/24 dev veth-tena
-ip netns exec tenant-a ip link set veth-tena up
-
-# --- Verify ---
-ovs-vsctl show
-
-# tenant-a (access VLAN 100) reaches fw-dmz's VLAN 100 sub-interface
-ip netns exec tenant-a ping -c 2 10.0.100.1
-```
-
-**Read-only monitor** — same flow table as forwarding (no separate subsystem):
-
-```bash
-ovs-ofctl add-flow ovsbr0 "priority=100,in_port=veth-mon-br,actions=drop"
-```
-
-Or as a proper SPAN mirror:
-
-```bash
-ovs-vsctl -- --id=@p get port veth-mon-br \
-  -- --id=@m create mirror name=all-vlans \
-     select-vlan=100,123,150,200 \
-     output-port=@p
-```
-
-```bash
-# Cleanup
-for ns in fw-dmz fw-internal monitor tenant-a; do ip netns del $ns; done
-ovs-vsctl del-br ovsbr0
-```
-
-### 3e. Lab Exercises (Run Against Both Setups)
-
-Rebuild namespaces between each test. Run each exercise on the VLAN-aware
-bridge first, then OVS, and note the differences.
+Rebuild namespaces between each test using section 3c's VLAN-aware bridge
+setup.
 
 **Exercise 1 — Baseline connectivity.** Verify all four guests have the
 correct connectivity: `tenant-a` reaches `fw-dmz` on VLAN 100 only, `fw-dmz`
@@ -686,17 +526,10 @@ and `fw-internal` are isolated from each other, `monitor` can see all VLANs.
 **Exercise 2 — Day-2 VLAN change.** Add VLAN 300 to `fw-dmz`:
 
 ```bash
-# OVS: one atomic, persisted command — no guest-side change
-ovs-vsctl set port veth-dmz-br trunks=100,200,300
-
-# VLAN-aware bridge: live but NOT persisted across reboot
 bridge vlan add vid 300 dev veth-dmz-br
-
-# VLAN-unaware bridge: create br-300, new veth pair, new namespace
-# interface — disruptive, guest must be reconfigured
 ```
 
-Then inside fw-dmz (same for both bridge and OVS):
+Then inside fw-dmz:
 
 ```bash
 ip netns exec fw-dmz ip link add link veth-dmz name veth-dmz.300 type vlan id 300
@@ -704,40 +537,30 @@ ip netns exec fw-dmz ip addr add 10.0.300.1/24 dev veth-dmz.300
 ip netns exec fw-dmz ip link set veth-dmz.300 up
 ```
 
-Reboot the Fedora VM and check: OVS config survives (OVSDB). Bridge config
-is gone.
+Note: `bridge vlan` changes are live but **not persisted** across reboot.
+On OpenShift, NMState + Bridge CNI NADs handle persistence declaratively.
 
 **Exercise 3 — Prove VLAN isolation.** From `fw-dmz`, send a tagged frame on
 VLAN 123 (not in its allowed set). Verify it never reaches `fw-internal`.
 
 ```bash
-# OVS: prove without generating traffic
-ovs-appctl ofproto/trace ovsbr0 \
-  "in_port=veth-dmz-br,dl_vlan=123,dl_src=aa:bb:cc:dd:ee:01,dl_dst=ff:ff:ff:ff:ff:ff"
-# Output shows: dropped
-
-# Bridge: must use tcpdump — run on the fw-internal side and check for absence
 ip netns exec fw-internal tcpdump -c 5 -i veth-int &
 ip netns exec fw-dmz ip link add link veth-dmz name veth-dmz.123 type vlan id 123
 ip netns exec fw-dmz ip addr add 10.0.123.99/24 dev veth-dmz.123
 ip netns exec fw-dmz ip link set veth-dmz.123 up
 ip netns exec fw-dmz ping -c 3 10.0.123.1
-# tcpdump shows nothing — but absence of evidence is not evidence of absence
+# tcpdump on fw-internal shows nothing — the bridge drops the frame
 ```
 
 **Exercise 4 — Passive monitor.** Generate traffic between `tenant-a` and
 `fw-dmz` on VLAN 100. Verify `monitor` sees it on `veth-mon.100`. Then try
-to inject a frame from `monitor` and verify it's dropped by the ingress flow
-(OVS) or nftables rule (bridge).
+to inject a frame from `monitor` and verify it's dropped by the nftables
+rule from section 3c.
 
 **Exercise 5 — Asymmetric expansion.** Give `fw-internal` access to VLAN 100
 in addition to 123/150:
 
 ```bash
-# OVS
-ovs-vsctl set port veth-int-br trunks=100,123,150
-
-# VLAN-aware bridge
 bridge vlan add vid 100 dev veth-int-br
 ```
 
@@ -752,309 +575,14 @@ ip netns exec fw-internal ip link set veth-int.100 up
 With the per-bridge model this would require adding a new veth pair to br-100
 and reconfiguring the guest.
 
-### 3f. Performance Testing
-
-```bash
-dnf install -y iperf3 sockperf hping3 perf
-```
-
-Run every test below on the VLAN-aware bridge topology first, then tear it down
-and rebuild with OVS. Record results side-by-side.
-
-#### Why the numbers differ — datapath architecture
-
-**VLAN-aware bridge** operates entirely in the kernel. Frame classification is a
-per-port VLAN bitmap — O(1) regardless of how many VLANs are configured. The
-forwarding database (FDB) is a hash table keyed on `(MAC, VLAN)`. There is no
-userspace component in the fast path.
-
-**OVS** uses a two-tier architecture:
-
-- **Slow path (`ovs-vswitchd`):** Userspace daemon that compiles OpenFlow rules
-  into datapath flows. The first packet of each new *megaflow* (a wildcarded
-  flow entry) takes a kernel-to-userspace upcall — typically 10–50 µs.
-- **Fast path (`openvswitch` kernel module):** Subsequent packets matching an
-  existing megaflow are processed in-kernel via a hash-based flow cache. Once
-  cached, per-packet cost is within a few microseconds of native bridge
-  performance, but the tuple-space match is inherently more complex than a
-  bitmap lookup.
-
-The practical consequence: **OVS latency is bimodal.** Cached flows are fast;
-cache misses produce visible spikes. Throughput with large frames is nearly
-identical; the gap widens with small packets where per-packet overhead dominates.
-
-#### Throughput
-
-**Multi-stream TCP** (expect near-identical at small scale):
-
-```bash
-ip netns exec tenant-a iperf3 -s
-
-ip netns exec fw-dmz iperf3 -c 10.0.100.1 -t 30 -P 4
-```
-
-**Single-stream TCP** (isolates per-flow overhead):
-
-```bash
-ip netns exec fw-dmz iperf3 -c 10.0.100.1 -t 60
-```
-
-**Small-packet UDP PPS** (most revealing — maximises per-packet processing
-cost):
-
-```bash
-ip netns exec fw-dmz iperf3 -c 10.0.100.1 -u -b 0 -l 64 -t 30
-```
-
-64-byte frames push packets-per-second to the limit. Expect OVS to show
-**5–15 % lower PPS** than bridge here because the megaflow hash match is more
-expensive per packet than the bridge's FDB lookup, even when fully cached.
-
-**Jumbo frames** (shows overhead amortisation):
-
-```bash
-ip netns exec fw-dmz iperf3 -c 10.0.100.1 -t 30 -M 8948
-```
-
-With ~9 KB frames the per-packet overhead is amortised over more payload bytes,
-so the OVS/bridge gap shrinks to noise.
-
-#### Latency
-
-**Median latency** (OVS has marginally higher per-packet cost from flow table
-lookup):
-
-```bash
-ip netns exec tenant-a sockperf server --tcp
-ip netns exec fw-dmz sockperf ping-pong -i 10.0.100.10 --tcp -t 60
-```
-
-**Tail latency** (P99/P99.9 — captures megaflow-miss spikes in OVS):
-
-```bash
-ip netns exec fw-dmz sockperf under-load -i 10.0.100.10 --tcp -t 60 \
-  --mps 50000 --full-log /tmp/latency-underload.csv
-```
-
-Review the histogram:
-
-```bash
-sort -t, -k2 -n /tmp/latency-underload.csv | tail -100
-```
-
-Or use sockperf's built-in percentile output:
-
-```bash
-ip netns exec fw-dmz sockperf ping-pong -i 10.0.100.10 --tcp -t 60 --pps 10000
-```
-
-Expected results (order-of-magnitude, veth-based namespaces on modern hardware):
-
-| Metric | VLAN-aware bridge | OVS (cached) | OVS (miss) |
-|---|---|---|---|
-| Median RTT | ~15–25 µs | ~18–30 µs | ~60–150 µs |
-| P99 RTT | ~30–50 µs | ~40–80 µs | ~200–500 µs |
-| P99.9 RTT | ~50–80 µs | ~80–200 µs | ~500+ µs |
-
-Key takeaway: **median is close, tails diverge.** For a firewall VM the
-occasional megaflow miss is unlikely to matter, but for latency-sensitive
-financial or telco workloads the P99.9 difference is worth measuring.
-
-#### Flow table scaling
-
-Baseline inspection (already useful at small scale):
-
-```bash
-ovs-dpctl dump-flows              # OVS datapath flows
-bridge fdb show dev br-trunk      # bridge forwarding DB
-```
-
-**Stress test — generate many distinct flows:**
-
-```bash
-for i in $(seq 1 500); do
-  ip netns exec fw-dmz ping -c 1 -W 0.1 10.0.100.$((i % 254 + 1)) &>/dev/null &
-done
-wait
-```
-
-**Inspect OVS megaflow cache and miss rate:**
-
-```bash
-ovs-dpctl show                                # total flow count
-ovs-appctl dpctl/dump-flows -m                # megaflow entries with masks
-ovs-appctl upcall/show                        # flow-miss rate, upcall queue depth
-ovs-appctl coverage/show | grep -E 'flow_|megaflow|upcall'
-```
-
-**Inspect bridge FDB growth:**
-
-```bash
-bridge fdb show dev br-trunk | wc -l
-bridge -s fdb show dev br-trunk               # with per-entry stats
-```
-
-**Real-time monitoring during a load test:**
-
-```bash
-watch -n 1 'ovs-dpctl show | grep flows; ovs-appctl dpctl/dump-flows | wc -l'
-```
-
-Scaling characteristics:
-
-| Factor | VLAN-aware bridge | OVS |
-|---|---|---|
-| Forwarding state | MAC FDB — auto-learned, ages out. ~8 K default, tunable. | Megaflow cache — ~200 K entries default; wildcard masks compress similar flows. |
-| VLAN lookup cost | Bitmap, O(1). 4094 VLANs cost zero extra per-packet work. | Each VLAN may instantiate separate megaflow entries if flow patterns differ. |
-| New-flow cost | ~0 (hash lookup in FDB, always in-kernel). | First packet: 10–50 µs userspace upcall. Cached: ~1–3 µs above bridge. |
-| 1000+ VLANs | No degradation — bitmap is fixed-size. | Megaflow cache pressure increases; watch for elevated `upcall` counts. |
-| 10 K+ MAC addresses | FDB hash table scales well; tune with `bridge -d fdb max_size`. | Megaflow wildcarding helps — one flow can match many MACs if other tuple fields are identical. |
-
-#### CPU & memory profiling
-
-**Per-CPU overhead during an iperf3 run:**
-
-```bash
-perf stat -e cycles,instructions,cache-misses -a -C 0 sleep 10
-```
-
-Run this in a second terminal while iperf3 is active. Repeat for bridge and OVS;
-OVS will typically show higher cycle counts per byte transferred.
-
-**Softirq delta:**
-
-```bash
-cat /proc/softirqs > /tmp/sirq-before
-# ... run iperf3 for 30 s ...
-cat /proc/softirqs > /tmp/sirq-after
-diff /tmp/sirq-before /tmp/sirq-after
-```
-
-Look at `NET_RX` and `NET_TX` rows — OVS drives more softirq work per byte.
-
-**OVS userspace memory footprint:**
-
-```bash
-ps -eo rss,comm | grep ovs
-ovs-appctl memory/show
-```
-
-Typical RSS: `ovsdb-server` 10–30 MB, `ovs-vswitchd` 50–200 MB depending on
-flow count.
-
-**Bridge kernel memory:**
-
-```bash
-grep bridge /proc/slabinfo
-```
-
-Bridge has no userspace daemons — all state lives in kernel slab allocations,
-which are minimal.
-
-#### Performance summary
-
-| Dimension | VLAN-aware bridge | OVS |
-|---|---|---|
-| Throughput (1500 B frames) | Baseline | ~same (within noise) |
-| Throughput (64 B UDP PPS) | Baseline | 5–15 % lower |
-| Median latency | Baseline | +2–5 µs |
-| P99.9 latency | Baseline | +50–150 µs (megaflow misses) |
-| CPU per Gbps | Lower | ~10–20 % higher |
-| Memory | Kernel-only, minimal | +50–200 MB userspace |
-| Flow scaling (1 K+ unique flows) | FDB hash, trivial | Megaflow cache — good, but monitor upcalls |
-| VLAN scaling (100+ VLANs) | Zero per-packet cost (bitmap) | More megaflow entries, still manageable |
-
-At the scale of a single host with fewer than 50 VMs and fewer than 100 VLANs,
-throughput and latency differences are negligible. OVS wins on operability
-(persistence, SPAN, tracing, OpenFlow programmability). The bridge wins on raw
-simplicity, lower tail latency, and zero userspace footprint. The performance
-gap only becomes meaningful at very high PPS with small packets or in workloads
-where P99.9 latency matters.
-
-### 3g. Operational Tooling Comparison
-
-**SPAN/mirror a VLAN for debugging:**
-
-```bash
-# OVS: native, one command, no traffic disruption
-ovs-vsctl -- set bridge ovsbr0 mirrors=@m \
-  -- --id=@m create mirror name=vlan100-mirror \
-     select-vlan=100 output-port=@p \
-  -- --id=@p get port veth-mon-br _uuid
-
-# Linux bridge: tc mirred (fragile, separate subsystem)
-tc qdisc add dev br-trunk ingress
-tc filter add dev br-trunk parent ffff: protocol 802.1q \
-  u32 match u16 0x0064 0x0fff at -2 \
-  action mirred egress mirror dev veth-mon-br
-```
-
-**Rate limiting per guest:**
-
-```bash
-# OVS: first-class port policing
-ovs-vsctl set interface veth-dmz-br ingress_policing_rate=1000000
-ovs-vsctl set interface veth-dmz-br ingress_policing_burst=100000
-
-# Linux bridge: tc
-tc qdisc add dev veth-dmz-br root tbf rate 1gbit burst 100kb latency 10ms
-```
-
-**Packet tracing:**
-
-```bash
-# OVS: full pipeline simulation without generating traffic
-ovs-appctl ofproto/trace ovsbr0 \
-  "in_port=veth-dmz-br,dl_vlan=100,dl_src=aa:bb:cc:dd:ee:01,dl_dst=ff:ff:ff:ff:ff:ff"
-
-# Linux bridge: tcpdump at each hop is the only option
-```
-
 ---
 
-## Phase 4: OVN (Control Plane for OVS)
+## Phase 4: OVN → Kubernetes Concept Mapping
 
-Still on the Fedora lab VM. OVN adds a logical networking layer on top of OVS.
-
-### 4a. Install Standalone OVN
-
-```bash
-dnf install -y ovn ovn-central ovn-host
-systemctl enable --now ovn-northd ovsdb-server-nb ovsdb-server-sb ovn-controller
-```
-
-### 4b. Create Logical Topology
-
-```bash
-# Logical switch (like a VLAN segment or UDN L2 network)
-ovn-nbctl ls-add tenant1
-
-# Logical ports (like pod interfaces)
-ovn-nbctl lsp-add tenant1 port1
-ovn-nbctl lsp-set-addresses port1 "aa:bb:cc:dd:ee:01 10.0.0.1"
-ovn-nbctl lsp-add tenant1 port2
-ovn-nbctl lsp-set-addresses port2 "aa:bb:cc:dd:ee:02 10.0.0.2"
-
-# Logical router (like a UDN L3 topology or cluster gateway)
-ovn-nbctl lr-add router1
-ovn-nbctl lrp-add router1 rtr-tenant1 aa:bb:cc:dd:ee:ff 10.0.0.254/24
-
-# Connect router to switch
-ovn-nbctl lsp-add tenant1 tenant1-rtr
-ovn-nbctl lsp-set-type tenant1-rtr router
-ovn-nbctl lsp-set-addresses tenant1-rtr router
-ovn-nbctl lsp-set-options tenant1-rtr router-port=rtr-tenant1
-
-# ACLs (like NetworkPolicy)
-ovn-nbctl acl-add tenant1 to-lport 1000 'outport == "port1" && ip4.src == 10.0.0.2' allow
-ovn-nbctl acl-add tenant1 to-lport 900 'outport == "port1"' drop
-
-# Inspect
-ovn-nbctl show
-ovn-sbctl show
-```
-
-### 4c. OVN → OVN-Kubernetes Concept Mapping
+OVN is the logical control plane on top of OVS. On OpenShift, OVN-Kubernetes
+programs OVN automatically — you interact with it through Kubernetes resources
+(UDN, CUDN, NetworkPolicy), not `ovn-nbctl`. This table maps the OVN concepts
+to their Kubernetes equivalents:
 
 | OVN Concept | Kubernetes Equivalent |
 |---|---|
@@ -1062,7 +590,14 @@ ovn-sbctl show
 | Logical Router | UDN L3 topology / cluster default gateway |
 | Logical Switch Port | Pod network interface |
 | ACLs | NetworkPolicy / AdminNetworkPolicy |
-| Localnet port | Physical network attachment (VLAN trunk to node NIC) |
+| Localnet port | CUDN with `topology: Localnet` (maps to OVS bridge via `bridge-mappings`) |
+
+For debugging OVN on an OCP node:
+
+```bash
+oc debug node/<node> -- chroot /host ovn-nbctl show
+oc debug node/<node> -- chroot /host ovn-sbctl show
+```
 
 ---
 
@@ -1127,7 +662,7 @@ spec:
             stp:
               enabled: false
           port:
-            - name: ens4
+            - name: ens4  ## Change to suitable interface `oc debug node/{someworker} -- chroot /host ip -o link show`
     # If you need VLAN-aware filtering on the bridge:
     # (alternative: let Multus/CNI handle VLAN tagging)
 ```
@@ -1264,62 +799,86 @@ spec:
         hostSubnet: 24
 ```
 
-**Localnet topology** — maps UDN to a physical VLAN (the OVN equivalent of
-Multus bridge CNI, but managed centrally via OVN):
+**Localnet topology** — maps a CUDN to a physical VLAN via an OVS bridge.
+Requires NMState `bridge-mappings` on each node (see section 5e-2):
 
 ```yaml
 apiVersion: k8s.ovn.org/v1
-kind: UserDefinedNetwork
+kind: ClusterUserDefinedNetwork
 metadata:
-  name: phys-vlan100
-  namespace: default
+  name: cudn-vlan100
 spec:
-  topology: Localnet
-  localnet:
-    role: Secondary
-    subnets:
-      - cidr: 10.0.100.0/24
-    physicalNetworkName: physnet1
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["tenant-a"]
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet-trunk
+      vlan:
+        mode: Access
+        access:
+          id: 100
+      ipam:
+        mode: Disabled
 ```
 
-The `physicalNetworkName` maps to an OVS bridge mapping configured on the
-nodes. This is how OVN-Kubernetes exposes physical VLANs to pods/VMs.
+The `physicalNetworkName` maps to an OVS bridge mapping configured via
+NMState. This is how OVN-Kubernetes exposes physical VLANs to pods/VMs.
+Only `vlan.mode: Access` is supported in OCP 4.21 — one VLAN per CUDN.
 
-### 5e-1. OVS CNI — Trunk Attachments with Per-VM VLAN Filtering
+### 5e-1. Bridge CNI `vlanTrunk` — Per-VM VLAN Filtering
 
-The bridge CNI trunk NAD in 5c passes *all* VLANs to every attached pod/VM —
-there is no per-port VLAN list. For firewall VMs that need different VLAN
-subsets, OVS CNI (provided by the `ovs-cni` plugin, installable alongside
-CNAO/OpenShift Virtualization) is the natural fit.
+The bridge CNI trunk NAD in 5c passes *all* VLANs to every attached pod/VM.
+For firewall VMs that need different VLAN subsets on the same bridge, use
+the `vlanTrunk` parameter of the **bridge CNI plugin**. This gives each
+pod/VM its own per-port VLAN allow-list on a Linux bridge — the same
+`bridge vlan` filtering from Phase 3.
 
-**Prereq — OVS bridge on each node.** Use NMState to create an OVS bridge
-backed by the secondary NIC:
+> **Note:** The `ovs-cni` plugin (`"type": "ovs"`) is **unsupported** on
+> OpenShift since 4.14. Bridge CNI `vlanTrunk` is the supported replacement
+> for per-port VLAN filtering.
+
+**Prereq — VLAN-aware Linux bridge on each node.** Use NMState:
 
 ```yaml
 apiVersion: nmstate.io/v1
 kind: NodeNetworkConfigurationPolicy
 metadata:
-  name: ovs-br1
+  name: br-secondary
 spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
   desiredState:
     interfaces:
-      - name: ovs-br1
-        type: ovs-bridge
+      - name: br-secondary
+        type: linux-bridge
         state: up
         bridge:
+          options:
+            stp:
+              enabled: false
           port:
             - name: ens4
-    ovs-db:
-      external_ids: {}
+              vlan:
+                mode: trunk
+                trunk-tags:
+                  - id: 100
+                  - id: 123
+                  - id: 150
+                  - id: 200
 ```
 
 Verify on a node:
 
 ```bash
-oc debug node/<node> -- chroot /host ovs-vsctl show
+oc debug node/<node> -- chroot /host bridge vlan show
 ```
 
-You should see `ovs-br1` with `ens4` as a port.
+You should see `br-secondary` with the configured VLANs on `ens4`.
 
 **NAD: DMZ firewall trunk — VLANs 100, 200**
 
@@ -1333,9 +892,10 @@ spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "type": "ovs",
-      "bridge": "ovs-br1",
-      "trunk": [
+      "name": "trunk-dmz",
+      "type": "bridge",
+      "bridge": "br-secondary",
+      "vlanTrunk": [
         { "id": 100 },
         { "id": 200 }
       ]
@@ -1354,9 +914,10 @@ spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "type": "ovs",
-      "bridge": "ovs-br1",
-      "trunk": [
+      "name": "trunk-internal",
+      "type": "bridge",
+      "bridge": "br-secondary",
+      "vlanTrunk": [
         { "id": 123 },
         { "id": 150 }
       ]
@@ -1375,30 +936,19 @@ spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "type": "ovs",
-      "bridge": "ovs-br1",
-      "trunk": [
+      "name": "trunk-all",
+      "type": "bridge",
+      "bridge": "br-secondary",
+      "vlanTrunk": [
         { "minID": 1, "maxID": 4094 }
       ]
     }
 ```
 
-The `trunk` array maps directly to `ovs-vsctl set port <port> trunks=...`.
-Each pod/VM gets its own OVS port with its own VLAN allow-list — exactly the
-per-port trunk model from Phase 3.
-
-**VLAN range shorthand.** The OVS CNI `trunk` field supports both individual
-IDs and ranges:
-
-```json
-"trunk": [
-  { "id": 100 },
-  { "id": 200 },
-  { "minID": 300, "maxID": 399 }
-]
-```
-
-This is equivalent to `trunks=100,200,300-399` on the OVS port.
+Each pod/VM gets its own veth pair whose bridge-side end has per-port VLAN
+filtering — the same `bridge vlan` model from Phase 3. The `vlanTrunk`
+array supports individual IDs (`{ "id": 100 }`) and ranges
+(`{ "minID": 300, "maxID": 399 }`).
 
 **Test with a plain pod before using KubeVirt:**
 
@@ -1406,7 +956,7 @@ This is equivalent to `trunks=100,200,300-399` on the OVS port.
 apiVersion: v1
 kind: Pod
 metadata:
-  name: test-ovs-trunk
+  name: test-bridge-trunk
   annotations:
     k8s.v1.cni.cncf.io/networks: trunk-dmz
 spec:
@@ -1417,174 +967,159 @@ spec:
 ```
 
 ```bash
-oc exec test-ovs-trunk -- ip -d link show
+oc exec test-bridge-trunk -- ip -d link show
 # Expect net1 interface — create VLAN sub-interfaces inside:
-oc exec test-ovs-trunk -- ip link add link net1 name net1.100 type vlan id 100
-oc exec test-ovs-trunk -- ip addr add 10.0.100.50/24 dev net1.100
-oc exec test-ovs-trunk -- ip link set net1.100 up
+oc exec test-bridge-trunk -- ip link add link net1 name net1.100 type vlan id 100
+oc exec test-bridge-trunk -- ip addr add 10.0.100.50/24 dev net1.100
+oc exec test-bridge-trunk -- ip link set net1.100 up
 ```
 
-Verify on the host that OVS has the correct trunk config:
+Verify on the host that the bridge has the correct per-port VLAN config:
 
 ```bash
-oc debug node/<node> -- chroot /host ovs-vsctl list port | grep -A5 trunks
+oc debug node/<node> -- chroot /host bridge vlan show
 ```
 
-### 5e-2. UDN Localnet for Trunk VLANs
+### 5e-2. Localnet UDN — Per-VLAN Access Networks
 
-UDN localnet maps a single UDN to a single physical VLAN. To expose multiple
-VLANs as a trunk to a VM, create one localnet UDN per VLAN and attach multiple
-networks to the VM. This is a different model from OVS CNI — instead of one
-trunk NIC carrying tagged frames, the VM gets one untagged NIC per VLAN.
+Localnet UDN maps an OVN logical switch directly to a physical network via
+an OVS bridge. Each `ClusterUserDefinedNetwork` (CUDN) with `topology:
+Localnet` represents **one VLAN in access mode**. The VM gets one untagged
+NIC per CUDN — no trunk tagging inside the guest.
 
-**Node-level OVS bridge mapping** (required for localnet). On OCP with
-OVN-Kubernetes, configure via the cluster network operator:
+> **Important:** Localnet UDN supports only `vlan.mode: Access` in OCP 4.21.
+> There is no `Trunk` mode. The OCP 4.21 Virtualization docs (Table 10.1)
+> explicitly confirm: "Layer 2 trunk access: OVN-Kubernetes localnet = **No**."
 
-```yaml
-apiVersion: operator.openshift.io/v1
-kind: Network
-metadata:
-  name: cluster
-spec:
-  defaultNetwork:
-    ovnKubernetesConfig:
-      gatewayConfig:
-        routingViaHost: false
-  additionalNetworks:
-    - name: physnet1-mapping
-      type: Raw
-      rawCNIConfig: '{}'
-```
-
-The actual bridge mapping is set via NMState or the OVN-K config:
+**Step 1 — OVS bridge with bridge-mapping** (required for localnet).
+Use NMState to create a dedicated OVS bridge on a secondary NIC and map it:
 
 ```yaml
 apiVersion: nmstate.io/v1
 kind: NodeNetworkConfigurationPolicy
 metadata:
-  name: ovs-physnet1
+  name: ovs-bridge-trunk
 spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
   desiredState:
     interfaces:
-      - name: br-ex2
+      - name: ovs-bridge-trunk
         type: ovs-bridge
         state: up
         bridge:
+          allow-extra-patch-ports: true
+          options:
+            stp: false
           port:
             - name: ens4
     ovn:
       bridge-mappings:
-        - localnet: physnet1
-          bridge: br-ex2
+        - localnet: localnet-trunk
+          bridge: ovs-bridge-trunk
           state: present
 ```
 
-**One localnet UDN per VLAN:**
+Verify the mapping:
+
+```bash
+oc get nns <node> -o jsonpath='{.status.currentState.ovn.bridge-mappings}' | jq .
+```
+
+**Step 2 — One CUDN per VLAN:**
 
 ```yaml
 apiVersion: k8s.ovn.org/v1
-kind: UserDefinedNetwork
+kind: ClusterUserDefinedNetwork
 metadata:
-  name: phys-vlan100
-  namespace: firewall-vms
+  name: cudn-vlan100
 spec:
-  topology: Localnet
-  localnet:
-    role: Secondary
-    subnets:
-      - cidr: 10.0.100.0/24
-    physicalNetworkName: physnet1
-    vlan: 100
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["firewall-vms", "tenant-a"]
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet-trunk
+      vlan:
+        mode: Access
+        access:
+          id: 100
+      ipam:
+        mode: Disabled
 ---
 apiVersion: k8s.ovn.org/v1
-kind: UserDefinedNetwork
+kind: ClusterUserDefinedNetwork
 metadata:
-  name: phys-vlan200
-  namespace: firewall-vms
+  name: cudn-vlan200
 spec:
-  topology: Localnet
-  localnet:
-    role: Secondary
-    subnets:
-      - cidr: 10.0.200.0/24
-    physicalNetworkName: physnet1
-    vlan: 200
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["firewall-vms", "tenant-b"]
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet-trunk
+      vlan:
+        mode: Access
+        access:
+          id: 200
+      ipam:
+        mode: Disabled
 ---
 apiVersion: k8s.ovn.org/v1
-kind: UserDefinedNetwork
+kind: ClusterUserDefinedNetwork
 metadata:
-  name: phys-vlan123
-  namespace: firewall-vms
+  name: cudn-vlan123
 spec:
-  topology: Localnet
-  localnet:
-    role: Secondary
-    subnets:
-      - cidr: 10.0.123.0/24
-    physicalNetworkName: physnet1
-    vlan: 123
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["firewall-vms"]
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: localnet-trunk
+      vlan:
+        mode: Access
+        access:
+          id: 123
+      ipam:
+        mode: Disabled
 ```
 
-Heterogeneous VLAN assignment comes from which UDNs you attach to each VM:
-`fw-dmz` gets `phys-vlan100` + `phys-vlan200`; `fw-internal` gets
-`phys-vlan123`. No trunk tagging inside the VM — each interface arrives
+Heterogeneous VLAN assignment comes from which CUDNs you attach to each VM:
+`fw-dmz` gets `cudn-vlan100` + `cudn-vlan200`; `fw-internal` gets
+`cudn-vlan123`. No trunk tagging inside the VM — each interface arrives
 untagged on its VLAN.
 
-**Trade-off: OVS CNI trunk vs localnet-per-VLAN**
+**Trade-off: Bridge CNI `vlanTrunk` vs Localnet per-VLAN**
 
-| | OVS CNI trunk | Localnet per-VLAN |
+| | Bridge CNI `vlanTrunk` | Localnet per-VLAN |
 |---|---|---|
 | VM sees | One NIC, tagged 802.1Q frames | One NIC per VLAN, untagged |
 | Firewall appliance compat | Best — matches physical trunk model | Requires appliance to support multi-NIC |
-| VLAN add/remove | Edit one NAD, no VM restart | Attach/detach a UDN — may require VM restart |
-| NetworkPolicy | Not integrated (bypass OVN) | Integrated — OVN enforces per-UDN |
-| Central management | OVS CNI config per NAD | OVN northbound DB, Kubernetes API |
-| Live migration | Supported (OVS port recreated on target) | Supported (OVN port binding migrates) |
+| VLAN add/remove | Edit NAD + restart pod/VM | Create new CUDN + restart VM |
+| NetworkPolicy | Not enforced (bypasses OVN) | Enforced by OVN per-CUDN |
+| Bridge type on node | Linux bridge | OVS bridge |
+| Central management | Multus NADs | OVN northbound DB, Kubernetes API |
+| Live migration | Supported | Supported (OVN port binding migrates) |
 
-For firewall VMs that expect a standard 802.1Q trunk, **OVS CNI is the right
-choice**. Localnet-per-VLAN is better when the VM doesn't need to see VLAN tags
-or when you want OVN NetworkPolicy enforcement on each VLAN individually.
+For firewall VMs that expect a standard 802.1Q trunk, **Bridge CNI `vlanTrunk`
+is the right choice**. Localnet-per-VLAN is better when the VM doesn't need to
+see VLAN tags or when you want OVN NetworkPolicy enforcement on each VLAN.
 
 ### 5f. KubeVirt VMs with Network Attachments
 
-**Firewall VM with trunk via Multus bridge CNI:**
-
-```yaml
-apiVersion: kubevirt.io/v1
-kind: VirtualMachine
-metadata:
-  name: fw-dmz
-  namespace: default
-spec:
-  running: true
-  template:
-    spec:
-      domain:
-        devices:
-          interfaces:
-            - name: default
-              masquerade: {}
-            - name: trunk
-              bridge: {}
-        resources:
-          requests:
-            memory: 2Gi
-      networks:
-        - name: default
-          pod: {}
-        - name: trunk
-          multus:
-            networkName: trunk-bridge
-```
-
-Inside the VM, create VLAN sub-interfaces just like in Phase 1:
-
-```bash
-ip link add link eth1 name eth1.100 type vlan id 100
-ip link add link eth1 name eth1.200 type vlan id 200
-```
-
-**Firewall VM with OVS CNI trunk — DMZ (VLANs 100, 200):**
+**Firewall VM with Bridge CNI `vlanTrunk` — DMZ (VLANs 100, 200):**
 
 ```yaml
 apiVersion: kubevirt.io/v1
@@ -1614,7 +1149,7 @@ spec:
             networkName: trunk-dmz
 ```
 
-**Firewall VM with OVS CNI trunk — Internal (VLANs 123, 150):**
+**Firewall VM with Bridge CNI `vlanTrunk` — Internal (VLANs 123, 150):**
 
 ```yaml
 apiVersion: kubevirt.io/v1
@@ -1645,8 +1180,8 @@ spec:
 ```
 
 Both VMs get a single trunk NIC (`eth1` inside the guest). The VLAN allow-list
-is enforced by OVS on the host — `fw-dmz` can only send/receive VLANs 100 and
-200, `fw-internal` can only send/receive VLANs 123 and 150. Inside each VM:
+is enforced by the Linux bridge on the host via per-port `vlan_filtering`.
+Inside each VM:
 
 ```bash
 # fw-dmz
@@ -1668,35 +1203,20 @@ ip addr add 10.0.150.1/24 dev eth1.150
 ip link set eth1.150 up
 ```
 
-Verify isolation from the host — `fw-dmz` must not see VLAN 123 traffic:
+Verify VLAN filtering on the host:
 
 ```bash
-oc debug node/<node> -- chroot /host \
-  ovs-appctl ofproto/trace ovs-br1 \
-    "in_port=<fw-dmz-port>,dl_vlan=123,dl_src=aa:bb:cc:dd:ee:01,dl_dst=ff:ff:ff:ff:ff:ff"
-# Expected: drop
+oc debug node/<node> -- chroot /host bridge vlan show
 ```
 
-**Day-2: Add VLAN 300 to fw-dmz only.** Edit the NAD — no VM restart required:
+**Day-2: Add VLAN 300 to fw-dmz.** Edit the NAD and restart the VM (bridge
+CNI reads the NAD at pod creation time, not live):
 
-```yaml
-apiVersion: k8s.cni.cncf.io/v1
-kind: NetworkAttachmentDefinition
-metadata:
-  name: trunk-dmz
-  namespace: default
-spec:
-  config: |
-    {
-      "cniVersion": "0.3.1",
-      "type": "ovs",
-      "bridge": "ovs-br1",
-      "trunk": [
-        { "id": 100 },
-        { "id": 200 },
-        { "id": 300 }
-      ]
-    }
+```bash
+oc edit nad trunk-dmz
+# Add { "id": 300 } to the vlanTrunk array
+# Then restart the VM:
+virtctl restart fw-dmz
 ```
 
 Then inside `fw-dmz`:
@@ -1707,16 +1227,16 @@ ip addr add 10.0.300.1/24 dev eth1.300
 ip link set eth1.300 up
 ```
 
-`fw-internal` is unaffected — its OVS port still only allows VLANs 123 and 150.
+`fw-internal` is unaffected — its bridge port still only allows VLANs 123 and 150.
 
-**VM with UDN localnet (physical VLAN via OVN):**
+**Tenant VM with Localnet CUDN (physical VLAN via OVN):**
 
 ```yaml
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
 metadata:
   name: tenant-vm
-  namespace: default
+  namespace: tenant-a
 spec:
   running: true
   template:
@@ -1726,7 +1246,7 @@ spec:
           interfaces:
             - name: default
               masquerade: {}
-            - name: physnet
+            - name: vlan100
               bridge: {}
         resources:
           requests:
@@ -1734,12 +1254,12 @@ spec:
       networks:
         - name: default
           pod: {}
-        - name: physnet
+        - name: vlan100
           multus:
-            networkName: phys-vlan100
+            networkName: cudn-vlan100
 ```
 
-**Firewall VM with multiple localnet UDNs (one untagged NIC per VLAN):**
+**Firewall VM with multiple Localnet CUDNs (one untagged NIC per VLAN):**
 
 ```yaml
 apiVersion: kubevirt.io/v1
@@ -1768,28 +1288,27 @@ spec:
           pod: {}
         - name: vlan100
           multus:
-            networkName: firewall-vms/phys-vlan100
+            networkName: cudn-vlan100
         - name: vlan200
           multus:
-            networkName: firewall-vms/phys-vlan200
+            networkName: cudn-vlan200
 ```
 
 This VM gets `eth1` on VLAN 100 and `eth2` on VLAN 200 — both untagged. No
-VLAN sub-interfaces needed inside the guest. Useful when the appliance doesn't
-expect 802.1Q trunks, or when you want OVN NetworkPolicy to apply per-VLAN.
+VLAN sub-interfaces needed inside the guest. Useful when the appliance supports
+multiple discrete NICs, or when you want OVN NetworkPolicy to apply per-VLAN.
 
-#### Choosing between the three approaches
+#### Choosing between the approaches
 
 | Approach | When to use |
 |---|---|
-| Bridge CNI trunk (`"vlan": 0`) | Simple setups; all VMs see the same set of VLANs; no per-VM filtering needed. |
-| OVS CNI trunk (`"trunk": [...]`) | Firewall VMs expecting 802.1Q trunks with per-VM VLAN allow-lists. The typical production choice. |
-| Localnet per-VLAN | VMs that don't need 802.1Q tags; you want OVN NetworkPolicy on each VLAN; central management via K8s API. |
+| Bridge CNI `vlanTrunk` | Firewall VMs expecting 802.1Q trunks with per-VM VLAN allow-lists. Uses a Linux bridge. |
+| Localnet CUDN per-VLAN | VMs that don't need 802.1Q tags; you want OVN NetworkPolicy on each VLAN. Uses an OVS bridge. |
 
 ### 5g. OCP Exercises
 
-**Exercise 1 — NAD matrix.** Create NADs for bridge, macvlan, ipvlan, and
-OVS CNI. Attach plain pods to each. Document: interface name inside the pod,
+**Exercise 1 — NAD matrix.** Create NADs for bridge, macvlan, and ipvlan
+CNI. Attach plain pods to each. Document: interface name inside the pod,
 MAC address, whether the pod can reach the host, whether pods on different
 nodes can reach each other.
 
@@ -1797,18 +1316,17 @@ nodes can reach each other.
 bridge NAD and a UDN Layer2. Attach pods to each. Compare: how is IPAM
 handled, how does NetworkPolicy apply, what shows up in `ovn-nbctl show`.
 
-**Exercise 3 — OVS CNI trunk pod.** Deploy `test-ovs-trunk` from section
-5e-1. Verify the OVS port has the correct trunk list:
+**Exercise 3 — Bridge CNI `vlanTrunk` pod.** Deploy `test-bridge-trunk` from
+section 5e-1. Verify the bridge has per-port VLAN filtering:
 
 ```bash
-oc debug node/<node> -- chroot /host \
-  ovs-vsctl --columns=name,trunks list port | grep -A1 <port-name>
+oc debug node/<node> -- chroot /host bridge vlan show
 ```
 
 Create VLAN sub-interfaces inside the pod and confirm connectivity on allowed
 VLANs. Then try to send traffic on a disallowed VLAN and verify it's dropped.
 
-**Exercise 4 — KubeVirt firewall VMs with OVS trunk.** Deploy both `fw-dmz`
+**Exercise 4 — KubeVirt firewall VMs with bridge trunk.** Deploy both `fw-dmz`
 (trunk-dmz NAD, VLANs 100/200) and `fw-internal` (trunk-internal NAD, VLANs
 123/150) from section 5f. Inside each VM, create VLAN sub-interfaces and
 verify:
@@ -1825,68 +1343,61 @@ ping -c 3 10.0.123.10
 ping -c 3 10.0.150.10
 ```
 
-Prove isolation — from the host, use `ofproto/trace` to show that `fw-dmz`
-cannot reach VLAN 123:
+Verify isolation from the host — check that `fw-dmz`'s bridge port only
+allows VLANs 100 and 200:
 
 ```bash
-oc debug node/<node> -- chroot /host \
-  ovs-appctl ofproto/trace ovs-br1 \
-    "in_port=<fw-dmz-port>,dl_vlan=123,dl_src=aa:bb:cc:dd:ee:01,dl_dst=ff:ff:ff:ff:ff:ff"
+oc debug node/<node> -- chroot /host bridge vlan show
 ```
 
 **Exercise 5 — Day-2 VLAN change on OCP.** Add VLAN 300 to `fw-dmz` only.
-Compare the three approaches:
+Compare the two approaches:
 
 | Approach | Steps | VM restart? |
 |---|---|---|
-| Bridge CNI | Edit NAD to add new bridge or change `"vlan"` — but bridge CNI has no per-port VLAN list, so you can't filter per-VM. | Depends on NAD change scope |
-| OVS CNI | `oc edit nad trunk-dmz` — add `{ "id": 300 }` to the trunk array. Inside VM: `ip link add link eth1 name eth1.300 type vlan id 300`. | No |
-| Localnet UDN | Create a new `phys-vlan300` UDN. Attach it to `fw-dmz-localnet` VM spec. | Yes (VM spec change) |
+| Bridge CNI `vlanTrunk` | `oc edit nad trunk-dmz` — add `{ "id": 300 }` to the `vlanTrunk` array. Then restart the VM. | Yes |
+| Localnet CUDN | Create a new `cudn-vlan300` CUDN. Add it to `fw-dmz-localnet` VM spec. | Yes (VM spec change) |
 
-After the OVS CNI change, verify on the host:
+After the bridge CNI change and VM restart, verify on the host:
 
 ```bash
-oc debug node/<node> -- chroot /host \
-  ovs-vsctl list port | grep -A2 trunks
+oc debug node/<node> -- chroot /host bridge vlan show
 ```
 
 Confirm `fw-internal` is unaffected — its port still shows only VLANs 123, 150.
 
 **Exercise 6 — Localnet multi-VLAN VM.** Deploy `fw-dmz-localnet` from
-section 5f with `phys-vlan100` and `phys-vlan200`. Verify the VM gets two
+section 5f with `cudn-vlan100` and `cudn-vlan200`. Verify the VM gets two
 separate NICs (eth1, eth2), each untagged on its respective VLAN. Compare the
-operational model with the OVS trunk approach from Exercise 4.
+operational model with the bridge trunk approach from Exercise 4.
 
 **Exercise 7 — Full comparison matrix.** After completing exercises 3–6, fill
 in a comparison table with your observations:
 
-| | Bridge CNI trunk | OVS CNI trunk | Localnet per-VLAN |
-|---|---|---|---|
-| Per-VM VLAN filtering | | | |
-| VLAN add without restart | | | |
-| ofproto/trace works | | | |
-| NetworkPolicy enforced | | | |
-| Appliance compatibility | | | |
+| | Bridge CNI `vlanTrunk` | Localnet CUDN per-VLAN |
+|---|---|---|
+| Per-VM VLAN filtering | | |
+| VLAN add without restart | | |
+| NetworkPolicy enforced | | |
+| Appliance compatibility | | |
+| Bridge type on node | | |
 
 ---
 
-## Comparison Matrix: Heterogeneous Trunk-to-Guest
+## Comparison Matrix: OCP 4.21 Secondary Network Approaches
 
-| Dimension | Bridge (per-VLAN) | Bridge (VLAN-aware) | OVS |
-|---|---|---|---|
-| Per-guest VLAN selection | Which bridges attached | `bridge vlan` per port | `trunks=X,Y,Z` per port |
-| Guest NICs for 2-VLAN trunk | 2 | 1 | 1 |
-| Guest NICs for 4-VLAN trunk | 4 | 1 | 1 |
-| Firewall appliance compat | Poor (discrete NICs) | Good (802.1Q trunk) | Good (802.1Q trunk) |
-| Add VLAN to one guest | New bridge + NIC (disruptive) | `bridge vlan add` (live, not persisted) | `ovs-vsctl set port` (live, persisted) |
-| Persistence across reboot | nmcli/libvirt (natural) | Requires external scripting | OVSDB (native) |
-| Read-only mirror port | Not possible | nftables (separate subsystem) | Native mirror or drop flow |
-| Prove isolation without traffic | Not possible | Not possible | `ofproto/trace` |
-| SPAN/mirror | `tc mirred` (fragile) | `tc mirred` (fragile) | Native `ovs-vsctl mirror` |
-| QoS | `tc` | `tc` | Native per-port policing |
-| Packet tracing | `tcpdump` only | `tcpdump` + `bridge vlan show` | `ofproto/trace` (full pipeline) |
-| Central management | None | None | OVN northbound DB / OVN-K8s |
-| Scale (100s of VMs) | Bridge sprawl | Single bridge, reasonable | Best — flow caching, OVN |
+| Dimension | Bridge CNI `vlanTrunk` | Localnet CUDN (Access) |
+|---|---|---|
+| Bridge type | Linux bridge (`vlan_filtering`) | OVS bridge (`bridge-mappings`) |
+| VM sees | One NIC, tagged 802.1Q frames | One NIC per VLAN, untagged |
+| Per-VM VLAN selection | `vlanTrunk` array in NAD | Which CUDNs attached to VM |
+| Guest NICs for 2-VLAN trunk | 1 | 2 |
+| Firewall appliance compat | Good (802.1Q trunk) | Requires multi-NIC support |
+| Add VLAN to one VM | Edit NAD + restart VM | New CUDN + restart VM |
+| NetworkPolicy | Not enforced (bypasses OVN) | Enforced by OVN per-CUDN |
+| Central management | Multus NADs | Kubernetes API (CUDN) |
+| Live migration | Supported | Supported (OVN port binding migrates) |
+| Packet tracing | `tcpdump` + `bridge vlan show` | `tcpdump` + `ovn-trace` |
 
 ---
 
@@ -1894,8 +1405,9 @@ in a comparison table with your observations:
 
 | Use Case | Best Construct | Why |
 |---|---|---|
-| Firewall VM, static VLANs | VLAN-aware Linux bridge + bridge CNI | Simplest, lowest latency |
-| Firewall VM, dynamic/heterogeneous VLANs | OVS trunk ports + OVS CNI or OVN localnet | Declarative, persisted, verifiable per-port trunk lists |
+| Firewall routing between internal VLANs and external trunk (few internal VLANs) | Model 4: Localnet CUDN (primary) + Bridge CNI `vlanTrunk` (secondary) | Clear int/ext boundary; NetworkPolicy on internal. Limited by NIC-per-VLAN on the firewall. |
+| Firewall VM, 802.1Q trunk (single NIC only) | Bridge CNI `vlanTrunk` | Per-port VLAN allow-list; single trunk NIC for appliance |
+| Tenant VM, per-VLAN access | Localnet CUDN (Access mode) | OVN NetworkPolicy; Kubernetes-native management |
 | VM needing direct L2 to physical network | macvlan (bridge mode) via Multus | Lowest overhead, direct L2 (can't talk to host) |
 | VM with many NICs, switch MAC limits | ipvlan L2 via Multus | Single MAC shared across sub-interfaces |
 | Tenant isolation (namespace-scoped) | UDN Layer2 or Layer3 | Native OVN-K8s, built-in NetworkPolicy |
@@ -1905,24 +1417,40 @@ in a comparison table with your observations:
 
 ### The Punchline
 
-> **Will different VMs need different VLAN subsets, and will those subsets
-> change over time?**
+> **There is no single "best" model — choose based on your constraints.**
 >
-> - **No** → VLAN-aware Linux bridge with bridge CNI. Simplest, lowest latency.
-> - **Yes** → OVS. Per-port trunk lists are declarative, persistent, atomically
->   updatable, and verifiable without generating traffic. The marginal latency
->   cost is irrelevant next to the operational cost of managing heterogeneous
->   VLAN assignments with `bridge vlan` commands and custom persistence scripts.
-> - **At scale with OVN-Kubernetes** → It's a hybrid. Firewall VMs use **OVS
->   CNI trunk** NADs (802.1Q trunk on a single NIC — what the appliance
->   expects). Tenant workload VMs use **UDN localnet** (one untagged NIC per
->   VLAN, OVN-managed). Both attachment types share the same OVS bridge on the
->   node, and the Kubernetes API manages all of it.
+> Each model trades off NIC count, VLAN scale, appliance compatibility,
+> and policy enforcement. Ask three questions:
+>
+> 1. **How many free NICs/bonds per node?** (1 or 2)
+> 2. **Does the firewall appliance require an 802.1Q trunk NIC?**
+> 3. **How many internal VLANs does the firewall need to participate in?**
+>
+> Decision tree:
+>
+> - **1 NIC, appliance supports multi-NIC** → **Model 1: All Localnet
+>   CUDN.** Simplest. One OVS bridge. NetworkPolicy on everything. Each
+>   VLAN = one NIC on the firewall, so impractical above ~8 VLANs.
+> - **1 NIC, appliance requires 802.1Q trunk** → **Model 2: All Bridge
+>   CNI.** Linux bridge with `vlan_filtering`. No OVN NetworkPolicy on
+>   secondary networks. Scales to many VLANs on a single trunk NIC.
+> - **2 NICs, firewall trunks external + tenants on separate bridge** →
+>   **Model 3: Hybrid.** Bridge CNI trunk for firewalls, Localnet CUDN
+>   for tenants. Both as secondary networks alongside the default
+>   cluster network.
+> - **2 NICs, clear internal/external split, few internal VLANs** →
+>   **Model 4: Internal/External Boundary.** Firewall uses a primary
+>   Localnet CUDN (internal) + Bridge CNI trunk (external). Clean
+>   security boundary. Limited by NIC-per-internal-VLAN on the firewall.
 
-### At Scale with Firewalls — How the Pieces Compose
+### Deployment Models
 
-The "At Scale" answer is not a single construct — it's two constructs working
-together on the same OVS bridge:
+#### Model 1: All Localnet CUDN
+
+Single OVS bridge, one NIC/bond. All VMs — firewall and tenant — attach via
+Localnet CUDNs. The firewall gets multiple discrete NICs instead of a trunk.
+Good fallback when only one NIC is available and the appliance supports
+multi-NIC.
 
 ```
   ┌─────────────────────────────────────────────────────────┐
@@ -1932,16 +1460,18 @@ together on the same OVS bridge:
   │  │  fw-dmz VM  │   │ tenant-a VM │   │ tenant-b VM  │  │
   │  │  (firewall) │   │ (workload)  │   │ (workload)   │  │
   │  │             │   │             │   │              │  │
-  │  │ eth1: trunk │   │ eth1: VLAN  │   │ eth1: VLAN   │  │
-  │  │  100,200    │   │  100 untag  │   │  200 untag   │  │
+  │  │ eth1: VLAN  │   │ eth1: VLAN  │   │ eth1: VLAN   │  │
+  │  │  100 untag  │   │  100 untag  │   │  200 untag   │  │
+  │  │ eth2: VLAN  │   │             │   │              │  │
+  │  │  200 untag  │   │             │   │              │  │
   │  └──────┬──────┘   └──────┬──────┘   └──────┬───────┘  │
   │         │                 │                  │          │
-  │    OVS CNI           Localnet UDN       Localnet UDN   │
-  │    trunk NAD         phys-vlan100       phys-vlan200    │
+  │    cudn-vlan100      cudn-vlan100       cudn-vlan200   │
+  │    cudn-vlan200                                        │
   │         │                 │                  │          │
   │  ┌──────┴─────────────────┴──────────────────┴───────┐  │
-  │  │                   ovs-br1                         │  │
-  │  │              (shared OVS bridge)                  │  │
+  │  │             ovs-bridge-trunk                      │  │
+  │  │         (OVS bridge, bridge-mappings)             │  │
   │  └──────────────────────┬────────────────────────────┘  │
   │                         │                               │
   │                       ens4                              │
@@ -1949,27 +1479,83 @@ together on the same OVS bridge:
   └─────────────────────────┴───────────────────────────────┘
 ```
 
-**Why this hybrid, not one or the other:**
+#### Model 2: All Bridge CNI
+
+Single Linux bridge, one NIC/bond. Firewall gets `vlanTrunk` NAD (802.1Q
+trunk NIC). Tenant VMs get bridge CNI with `"vlan": <id>` (access ports).
+No OVN NetworkPolicy on secondary networks.
+
+#### Model 3: Hybrid (Two NICs Required)
+
+Bridge CNI `vlanTrunk` on Linux bridge (NIC-A) for firewall trunks. Localnet
+CUDN on OVS bridge (NIC-B) for tenant per-VLAN access with NetworkPolicy.
+
+> **Critical constraint:** A physical NIC can only belong to one bridge at a
+> time (Red Hat KB 7107272). Bridge CNI requires a Linux bridge; Localnet
+> requires an OVS bridge. The hybrid model therefore requires **two NICs or
+> bonds**, with the physical switch handling L2 forwarding between them.
+
+```
+  ┌───────────────────────────────────────────────────────────────────────┐
+  │                         OCP Node                                     │
+  │                                                                       │
+  │  ┌─────────────┐            ┌─────────────┐   ┌──────────────┐       │
+  │  │  fw-dmz VM  │            │ tenant-a VM │   │ tenant-b VM  │       │
+  │  │  (firewall) │            │ (workload)  │   │ (workload)   │       │
+  │  │ eth1: trunk │            │ eth1: VLAN  │   │ eth1: VLAN   │       │
+  │  │  100,200    │            │  100 untag  │   │  200 untag   │       │
+  │  └──────┬──────┘            └──────┬──────┘   └──────┬───────┘       │
+  │         │                          │                  │               │
+  │   Bridge CNI                  cudn-vlan100       cudn-vlan200        │
+  │   vlanTrunk NAD                    │                  │               │
+  │         │                          │                  │               │
+  │  ┌──────┴──────────┐    ┌──────────┴──────────────────┴───────────┐  │
+  │  │  br-secondary   │    │            ovs-bridge-trunk             │  │
+  │  │  (Linux bridge) │    │            (OVS bridge)                 │  │
+  │  └───────┬─────────┘    └────────────────┬────────────────────────┘  │
+  │          │                               │                           │
+  │       NIC-A                           NIC-B                          │
+  │      (enp1s0)                        (enp2s0)                        │
+  └──────────┼───────────────────────────────┼───────────────────────────┘
+             │                               │
+        ┌────┴───────────────────────────────┴────┐
+        │          Physical Switch                 │
+        │    (trunk ports, same VLANs)             │
+        └──────────────────────────────────────────┘
+```
+
+Traffic between `fw-dmz` (VLAN 100 on Linux bridge) and `tenant-a` (VLAN 100
+on OVS bridge) flows: Linux bridge → NIC-A → switch → NIC-B → OVS bridge →
+OVN localnet port → tenant VM. The switch handles L2 forwarding on the shared
+VLAN.
+
+**Why this hybrid matters:** The hybrid model keeps firewall and tenant
+traffic on separate bridge types, but the firewall is "just another VM with
+a trunk NIC" — it doesn't participate in OVN's policy model. Model 4
+improves on this by giving the firewall a primary Localnet CUDN so it
+*also* lives inside the OVN-managed domain.
 
 | | Firewall VM | Tenant workload VM |
 |---|---|---|
 | What the VM expects | Single 802.1Q trunk NIC | Simple untagged NIC |
-| Attachment | OVS CNI trunk NAD | Localnet UDN |
-| VLAN filtering | Per-NAD `trunk` array | Per-UDN `vlan` field |
+| Attachment | Bridge CNI `vlanTrunk` NAD | Localnet CUDN |
+| Bridge type | Linux bridge | OVS bridge |
+| VLAN filtering | Per-NAD `vlanTrunk` array | Per-CUDN `vlan.access.id` |
 | NetworkPolicy | Not enforced (bypasses OVN) | Enforced by OVN |
 | Policy enforcement point | The firewall appliance itself | OVN ACLs + the firewall |
 
 NetworkPolicy applies to the **tenant side**, not the firewall trunk. Traffic
 between tenant VMs on different VLANs must traverse the firewall — it's the
 firewall that decides what crosses VLAN boundaries, not OVN. OVN's role is
-east-west micro-segmentation *within* each VLAN (e.g., restricting which
-tenant-a pods can talk to each other).
+east-west micro-segmentation *within* each VLAN.
 
-**Exercise — Hybrid deployment.** Deploy all three VMs on the same cluster:
+**Exercise — Hybrid deployment (Model 3).** Deploy all three VMs:
 
-1. Create the OVS bridge (`ovs-br1`) via NMState NNCP (section 5e-1).
+1. Create the Linux bridge (`br-secondary`) via NMState NNCP (section 5e-1).
 
-2. Create the OVS CNI trunk NAD for the firewall:
+2. Create the OVS bridge (`ovs-bridge-trunk`) with bridge-mappings (section 5e-2).
+
+3. Create the Bridge CNI `vlanTrunk` NAD for the firewall:
 
 ```yaml
 apiVersion: k8s.cni.cncf.io/v1
@@ -1981,48 +1567,19 @@ spec:
   config: |
     {
       "cniVersion": "0.3.1",
-      "type": "ovs",
-      "bridge": "ovs-br1",
-      "trunk": [
+      "name": "trunk-dmz",
+      "type": "bridge",
+      "bridge": "br-secondary",
+      "vlanTrunk": [
         { "id": 100 },
         { "id": 200 }
       ]
     }
 ```
 
-3. Create localnet UDNs for each tenant VLAN (section 5e-2):
+4. Create Localnet CUDNs for each tenant VLAN (section 5e-2).
 
-```yaml
-apiVersion: k8s.ovn.org/v1
-kind: UserDefinedNetwork
-metadata:
-  name: phys-vlan100
-  namespace: tenant-a
-spec:
-  topology: Localnet
-  localnet:
-    role: Secondary
-    subnets:
-      - cidr: 10.0.100.0/24
-    physicalNetworkName: physnet1
-    vlan: 100
----
-apiVersion: k8s.ovn.org/v1
-kind: UserDefinedNetwork
-metadata:
-  name: phys-vlan200
-  namespace: tenant-b
-spec:
-  topology: Localnet
-  localnet:
-    role: Secondary
-    subnets:
-      - cidr: 10.0.200.0/24
-    physicalNetworkName: physnet1
-    vlan: 200
-```
-
-4. Deploy the firewall VM (OVS CNI trunk) and two tenant VMs (localnet UDN):
+5. Deploy the firewall VM (Bridge CNI trunk) and two tenant VMs (Localnet CUDN):
 
 ```yaml
 apiVersion: kubevirt.io/v1
@@ -2075,7 +1632,7 @@ spec:
           pod: {}
         - name: vlan100
           multus:
-            networkName: tenant-a/phys-vlan100
+            networkName: cudn-vlan100
 ---
 apiVersion: kubevirt.io/v1
 kind: VirtualMachine
@@ -2101,18 +1658,17 @@ spec:
           pod: {}
         - name: vlan200
           multus:
-            networkName: tenant-b/phys-vlan200
+            networkName: cudn-vlan200
 ```
 
-5. Verify the three different attachment types coexist on the same OVS bridge:
+6. Verify bridge CNI VLAN filtering and OVS localnet ports:
 
 ```bash
+oc debug node/<node> -- chroot /host bridge vlan show
 oc debug node/<node> -- chroot /host ovs-vsctl show
-# Expect: ovs-br1 with ports for fw-dmz (trunks=100,200),
-#         localnet-mapped ports for tenant-a and tenant-b
 ```
 
-6. Verify the firewall sees tagged trunk frames:
+7. Verify the firewall sees tagged trunk frames:
 
 ```bash
 virtctl console fw-dmz
@@ -2122,16 +1678,426 @@ ip link set eth1.100 up
 tcpdump -e -i eth1   # should see 802.1Q tags
 ```
 
-7. Verify tenant VMs see untagged frames and have NetworkPolicy:
+8. Verify tenant VMs see untagged frames and have NetworkPolicy:
 
 ```bash
 virtctl console app-vm
-ip addr show eth1     # 10.0.100.x, no VLAN sub-interfaces needed
-
-# Apply a NetworkPolicy in tenant-a namespace and verify it takes effect
-# (this would NOT work on the firewall VM's trunk — OVS CNI bypasses OVN)
+ip addr show eth1     # untagged VLAN 100, no VLAN sub-interfaces needed
 ```
 
-8. Confirm that `app-vm` (VLAN 100) and `db-vm` (VLAN 200) cannot reach each
-   other directly — they're on different VLANs with no OVN router between
-   them. Cross-VLAN traffic must go through `fw-dmz`.
+9. Confirm that `app-vm` (VLAN 100) and `db-vm` (VLAN 200) cannot reach each
+   other directly — they're on different VLANs. Cross-VLAN traffic must go
+   through `fw-dmz` via the physical switch.
+
+#### Model 4: Internal/External Boundary
+
+A hybrid approach that combines Localnet CUDN and Bridge CNI `vlanTrunk`
+into a clear **internal/external security boundary**, with the firewall VM
+as the routing point between the two domains.
+
+> **Scalability caveat:** Because Localnet UDN only supports Access mode
+> (one VLAN per CUDN), each internal VLAN the firewall participates in
+> requires a separate NIC on the VM. This works well with 2–5 internal
+> VLANs but becomes impractical at scale. If the firewall needs 10+
+> internal VLANs, consider Model 2 or Model 3 with a Bridge CNI trunk
+> for the internal side as well.
+
+**Core idea:**
+
+- **Bond A → OVS bridge** — carries all *internal* tenant VLANs via
+  Localnet CUDNs. OVN-Kubernetes manages these networks: NetworkPolicy,
+  port security, and central visibility all apply. Every tenant VM and the
+  firewall itself attach to this domain.
+- **Bond B → Linux bridge** — carries the *external* physical network
+  trunk via Bridge CNI `vlanTrunk`. Only the firewall VM has an interface
+  here. This is the path to the upstream physical network (WAN, DMZ, data
+  centre backbone).
+- **The firewall VM** has a **primary Localnet CUDN** (replacing the
+  default cluster network) for internal connectivity, plus additional
+  secondary Localnet CUDNs for each internal VLAN, and a **secondary
+  Bridge CNI `vlanTrunk`** interface for the external trunk.
+
+The firewall routes between internal (OVN-managed, policy-enforced) and
+external (physical trunk) networks. Tenant VMs never touch the external
+bridge — they only see Localnet CUDNs. Cross-VLAN and external traffic
+must traverse the firewall.
+
+```
+  ┌────────────────────────────────────────────────────────────────────────────────┐
+  │                                  OCP Node                                     │
+  │                                                                               │
+  │  ┌──────────────────────────────────┐  ┌──────────────┐   ┌──────────────┐    │
+  │  │         fw-dmz VM (firewall)     │  │ tenant-a VM  │   │ tenant-b VM  │    │
+  │  │                                  │  │  (workload)  │   │  (workload)  │    │
+  │  │ PRIMARY: cudn-vlan100            │  │              │   │              │    │
+  │  │   eth0: VLAN 100 untagged        │  │ eth1: VLAN   │   │ eth1: VLAN   │    │
+  │  │                                  │  │  100 untag   │   │  200 untag   │    │
+  │  │ SECONDARY (internal):            │  │              │   │              │    │
+  │  │   eth1: VLAN 200 untagged        │  │              │   │              │    │
+  │  │   (cudn-vlan200)                 │  │              │   │              │    │
+  │  │                                  │  │              │   │              │    │
+  │  │ SECONDARY (external):            │  │              │   │              │    │
+  │  │   eth2: 802.1Q trunk (300,400)   │  │              │   │              │    │
+  │  │   (Bridge CNI vlanTrunk NAD)     │  │              │   │              │    │
+  │  └─────┬───────────┬────────┬───────┘  └──────┬───────┘   └──────┬───────┘    │
+  │        │           │        │                  │                  │            │
+  │        │ Internal  │        │ External         │ Internal         │ Internal   │
+  │        │ (primary) │        │ (trunk)          │                  │            │
+  │   cudn-vlan100  cudn-vlan200│            cudn-vlan100       cudn-vlan200      │
+  │        │           │        │                  │                  │            │
+  │  ┌─────┴───────────┴────────┼──────────────────┴──────────────────┴─────────┐  │
+  │  │         ovs-bridge-internal (OVS bridge, bridge-mappings)               │  │
+  │  │         Bond A — all internal/tenant VLANs                              │  │
+  │  └─────────────────┬───────────────────────────────────────────────────────┘  │
+  │                    │        │                                                  │
+  │                    │  ┌─────┴──────────────────┐                               │
+  │                    │  │  br-external           │                               │
+  │                    │  │  (Linux bridge)        │                               │
+  │                    │  │  Bond B — external     │                               │
+  │                    │  │  physical trunk         │                               │
+  │                    │  └──────────┬──────────────┘                               │
+  │                    │             │                                              │
+  │                 Bond A        Bond B                                            │
+  │                (enp1s0f0)    (enp2s0f0)                                         │
+  └────────────────────┼─────────────┼─────────────────────────────────────────────┘
+                       │             │
+                  ┌────┴─────────────┴────┐
+                  │    Physical Switch     │
+                  │  (VLANs on both bonds) │
+                  └───────────────────────┘
+```
+
+**Advantages of this approach:**
+
+| Dimension | Model 4 advantage |
+|---|---|
+| Security boundary | Clear internal/external split. Tenant VMs never touch the external bridge. |
+| Tenant simplicity | Tenants only see Localnet CUDNs — untagged NICs, no VLAN awareness. |
+| NetworkPolicy | Applies on all internal VLANs (OVN-managed). External trunk is the firewall's domain. |
+| Firewall visibility | Firewall has a primary UDN inside the OVN domain — OVN sees it as a first-class citizen. |
+| External trunk | Standard 802.1Q trunk to the physical network — works with any upstream switch/router. |
+| Scalability | Add external VLANs: edit the trunk NAD. Add internal VLANs: create new CUDNs — but each adds a NIC to the firewall VM (practical limit ~5–8). |
+| Live migration | Supported on both sides — OVN port binding migrates (internal), bridge CNI migrates (external). |
+
+**Implementation:**
+
+**Step 1 — Namespace with primary UDN label** (must be set at creation time):
+
+```bash
+oc create namespace firewall-vms --dry-run=client -o yaml | \
+  oc label --local -f - \
+    k8s.ovn.org/primary-user-defined-network="" \
+    --dry-run=client -o yaml | oc apply -f -
+```
+
+**Step 2 — Primary Localnet CUDN for the firewall's internal network:**
+
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: cudn-internal-100
+spec:
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["firewall-vms", "tenant-a"]
+  network:
+    topology: Localnet
+    localnet:
+      role: Primary
+      physicalNetworkName: internal-net
+      vlan:
+        mode: Access
+        access:
+          id: 100
+      ipam:
+        mode: Disabled
+```
+
+**Step 3 — Secondary Localnet CUDN for additional internal VLANs:**
+
+```yaml
+apiVersion: k8s.ovn.org/v1
+kind: ClusterUserDefinedNetwork
+metadata:
+  name: cudn-internal-200
+spec:
+  namespaceSelector:
+    matchExpressions:
+      - key: kubernetes.io/metadata.name
+        operator: In
+        values: ["firewall-vms", "tenant-b"]
+  network:
+    topology: Localnet
+    localnet:
+      role: Secondary
+      physicalNetworkName: internal-net
+      vlan:
+        mode: Access
+        access:
+          id: 200
+      ipam:
+        mode: Disabled
+```
+
+**Step 4 — External Linux bridge + Bridge CNI trunk NAD:**
+
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: br-external
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    interfaces:
+      - name: br-external
+        type: linux-bridge
+        state: up
+        bridge:
+          options:
+            stp:
+              enabled: false
+          port:
+            - name: enp2s0f0
+              vlan:
+                mode: trunk
+                trunk-tags:
+                  - id: 300
+                  - id: 400
+                  - id: 500
+---
+apiVersion: k8s.cni.cncf.io/v1
+kind: NetworkAttachmentDefinition
+metadata:
+  name: trunk-external
+  namespace: firewall-vms
+spec:
+  config: |
+    {
+      "cniVersion": "0.3.1",
+      "name": "trunk-external",
+      "type": "bridge",
+      "bridge": "br-external",
+      "vlanTrunk": [
+        { "id": 300 },
+        { "id": 400 },
+        { "id": 500 }
+      ]
+    }
+```
+
+**Step 5 — OVS bridge with bridge-mappings for internal VLANs:**
+
+```yaml
+apiVersion: nmstate.io/v1
+kind: NodeNetworkConfigurationPolicy
+metadata:
+  name: ovs-bridge-internal
+spec:
+  nodeSelector:
+    node-role.kubernetes.io/worker: ''
+  desiredState:
+    interfaces:
+      - name: ovs-bridge-internal
+        type: ovs-bridge
+        state: up
+        bridge:
+          allow-extra-patch-ports: true
+          options:
+            stp: false
+          port:
+            - name: enp1s0f0
+    ovn:
+      bridge-mappings:
+        - localnet: internal-net
+          bridge: ovs-bridge-internal
+          state: present
+```
+
+**Step 6 — Firewall VM:**
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: fw-dmz
+  namespace: firewall-vms
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: internal-100
+              bridge: {}
+            - name: internal-200
+              bridge: {}
+            - name: external-trunk
+              bridge: {}
+        resources:
+          requests:
+            memory: 4Gi
+      networks:
+        - name: internal-100
+          pod: {}
+        - name: internal-200
+          multus:
+            networkName: cudn-internal-200
+        - name: external-trunk
+          multus:
+            networkName: firewall-vms/trunk-external
+```
+
+The firewall VM gets three interfaces:
+
+- **eth0** — Primary Localnet CUDN (VLAN 100, untagged). This replaces
+  the default cluster network. The firewall is a first-class OVN citizen
+  on this VLAN, visible to NetworkPolicy.
+- **eth1** — Secondary Localnet CUDN (VLAN 200, untagged). Another
+  internal VLAN the firewall can route for.
+- **eth2** — Bridge CNI `vlanTrunk` (VLANs 300, 400, 500 as 802.1Q
+  trunk). The external physical network. The firewall creates
+  sub-interfaces (`eth2.300`, `eth2.400`, `eth2.500`) to handle each
+  external VLAN.
+
+**Step 7 — Tenant VMs** (only internal — no external access):
+
+```yaml
+apiVersion: kubevirt.io/v1
+kind: VirtualMachine
+metadata:
+  name: app-vm
+  namespace: tenant-a
+spec:
+  running: true
+  template:
+    spec:
+      domain:
+        devices:
+          interfaces:
+            - name: default
+              masquerade: {}
+            - name: vlan100
+              bridge: {}
+        resources:
+          requests:
+            memory: 1Gi
+      networks:
+        - name: default
+          pod: {}
+        - name: vlan100
+          multus:
+            networkName: cudn-internal-100
+```
+
+Tenant VMs attach only to internal Localnet CUDNs. They have no interface
+on the external bridge. To reach external networks (VLAN 300, 400, 500)
+they must route through `fw-dmz`.
+
+**Step 8 — Verification:**
+
+```bash
+# Internal side — OVN port bindings
+oc debug node/<node> -- chroot /host ovs-vsctl show
+oc debug node/<node> -- chroot /host ovn-nbctl show
+
+# External side — Linux bridge VLAN filtering
+oc debug node/<node> -- chroot /host bridge vlan show
+
+# Inside fw-dmz — configure external sub-interfaces
+virtctl console fw-dmz
+ip link add link eth2 name eth2.300 type vlan id 300
+ip addr add 10.0.300.1/24 dev eth2.300
+ip link set eth2.300 up
+
+# Verify internal connectivity
+ip addr show eth0    # VLAN 100 untagged (primary)
+ip addr show eth1    # VLAN 200 untagged (secondary)
+
+# Enable routing between internal and external
+sysctl -w net.ipv4.ip_forward=1
+# Add nftables/iptables rules as needed for the firewall policy
+```
+
+**Step 9 — Confirm tenant isolation:**
+
+```bash
+# From tenant-a: can reach fw-dmz on VLAN 100 (internal)
+virtctl console app-vm
+ping -c 3 <fw-dmz-eth0-ip>
+
+# From tenant-a: cannot reach external VLANs directly
+# (no interface on br-external, no route to 10.0.300.0/24)
+# Must go through fw-dmz as the default gateway
+```
+
+**Exercise — Model 4 deployment.** Deploy the full stack:
+
+1. Create namespaces: `firewall-vms` (with primary UDN label), `tenant-a`,
+   `tenant-b`.
+2. Create OVS bridge with bridge-mappings for internal VLANs (NNCP).
+3. Create Linux bridge for external trunk (NNCP).
+4. Create Localnet CUDNs for internal VLANs 100 and 200.
+5. Create Bridge CNI `vlanTrunk` NAD for external VLANs 300, 400, 500.
+6. Deploy `fw-dmz` with primary CUDN + secondary CUDN + external trunk.
+7. Deploy tenant VMs with internal CUDNs only.
+8. Verify: firewall sees both domains; tenants see only internal; cross-VLAN
+   traffic goes through the firewall.
+
+---
+
+## Key Learnings
+
+### `ovs-cni` is unsupported on OpenShift 4.14+
+
+The `ovs-cni` plugin (`"type": "ovs"`) is not shipped with OpenShift since
+the deprecation of OpenShift SDN. The binary does not exist on nodes. Use
+**Bridge CNI `vlanTrunk`** for per-port VLAN filtering instead.
+
+### Localnet UDN does NOT support trunk mode
+
+The OCP 4.21 `ClusterUserDefinedNetwork` / `UserDefinedNetwork` Localnet
+API only supports `vlan.mode: Access` (single VLAN per CUDN). There is no
+`Trunk` mode, no trunk array, and no VLAN allow list.
+
+**Sources:**
+- OKD 4.21 REST API: `VLANMode` enum is `[Access]`
+- Red Hat OCP 4.21 Network API docs: "Allowed value is 'Access'"
+- OCP 4.21 Virtualization docs Table 10.1: "Layer 2 trunk access:
+  Linux bridge CNI = Yes, OVN-Kubernetes localnet = **No**"
+- Upstream OVN-Kubernetes OKEP-5085: Only describes Access VLAN config
+
+### Bridge CNI and Localnet UDN use different bridge types
+
+- **Bridge CNI** (`vlanTrunk`) operates on a **Linux bridge** with
+  `vlan_filtering`. Configured via NMState NNCP (`type: linux-bridge`).
+- **Localnet UDN** operates on an **OVS bridge** configured via NMState
+  `bridge-mappings`. OVN-Kubernetes programs the OVS flows.
+- A physical NIC can only belong to one bridge at a time (Red Hat KB 7107272).
+- Therefore, the hybrid model (Model 3) requires two physical NICs or bonds.
+
+### Multi-VLAN access for a single VM
+
+To give a VM access to multiple VLANs:
+- **Bridge CNI `vlanTrunk`:** Single trunk NIC carrying 802.1Q tagged frames.
+  The VM creates VLAN sub-interfaces. One NAD per VLAN subset.
+- **Localnet CUDN:** Multiple discrete untagged NICs, one per VLAN. The VM
+  sees each as a separate interface. One CUDN per VLAN.
+
+### Model selection
+
+| Constraint | Suitable Model(s) |
+|---|---|
+| 1 NIC, appliance supports multi-NIC | Model 1 (All Localnet CUDN) |
+| 1 NIC, appliance requires 802.1Q trunk | Model 2 (All Bridge CNI) |
+| 2 NICs, firewall needs trunk + tenants need policy | Model 3 (Hybrid) or Model 4 (Internal/External Boundary) |
+| 2 NICs, clear int/ext split, few internal VLANs (≤5) | Model 4 (Internal/External Boundary) |
+| 2 NICs, many internal VLANs (10+) | Model 3 (Hybrid) — trunk scales better than NIC-per-VLAN |
+| Need OVN NetworkPolicy per VLAN | Model 1, Model 3, or Model 4 |
+| Only one free NIC on nodes | Model 1 or Model 2 (cannot do Model 3 or 4) |
+| No firewall needed, just tenant isolation | Model 1 (All Localnet CUDN) |

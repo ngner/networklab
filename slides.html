@@ -110,13 +110,13 @@
   filter: drop-shadow(0 2px 12px rgba(0,0,0,0.3));
 }
 
-/* Network element styles used in SVG */
-.ns-box { fill: var(--bg-card); stroke: var(--accent); stroke-width: 2; rx: 8; }
-.ns-box-alt { fill: var(--bg-card); stroke: var(--accent3); stroke-width: 2; rx: 8; }
-.bridge-box { fill: #292929; stroke: var(--warn); stroke-width: 2.5; rx: 6; }
-.ovs-box { fill: #292929; stroke: var(--accent2); stroke-width: 2.5; rx: 6; }
+/* Network element styles used in SVG — styled to match @rhds/icons line weight */
+.ns-box { fill: var(--bg-card); stroke: var(--accent); stroke-width: 2.5; rx: 10; }
+.ns-box-alt { fill: var(--bg-card); stroke: var(--accent3); stroke-width: 2.5; rx: 10; }
+.bridge-box { fill: #292929; stroke: var(--warn); stroke-width: 3; rx: 8; }
+.ovs-box { fill: #292929; stroke: var(--accent2); stroke-width: 3; rx: 8; }
 .veth-line { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 8 4; }
-.cable { stroke: var(--fg-dim); stroke-width: 2; }
+.cable { stroke: var(--fg-dim); stroke-width: 2.5; }
 .cable-tagged { stroke-width: 3; }
 .label { font-family: 'Red Hat Display', sans-serif; fill: #fff; font-size: 14px; font-weight: 600; }
 .label-sm { font-family: 'Red Hat Mono', monospace; fill: var(--fg-dim); font-size: 11px; }
@@ -464,10 +464,10 @@
       <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
         <rect x="40" y="40" width="240" height="220" class="ns-box"/>
         <text x="160" y="30" class="label" text-anchor="middle" style="fill:var(--accent); font-size:13px;">Network Namespace</text>
-        <use href="#rhi-container" x="119" y="52" width="18" height="18" style="fill:var(--accent); opacity:0.7;"/>
-        <text x="160" y="72" class="label" text-anchor="middle">guest-a</text>
-        <text x="160" y="100" class="label-sm" text-anchor="middle">Own interfaces, routes,</text>
-        <text x="160" y="116" class="label-sm" text-anchor="middle">iptables, ARP cache</text>
+        <use href="#rhi-container" x="125" y="48" width="30" height="30" style="fill:var(--accent);"/>
+        <text x="160" y="92" class="label" text-anchor="middle">guest-a</text>
+        <text x="160" y="110" class="label-sm" text-anchor="middle">Own interfaces, routes,</text>
+        <text x="160" y="124" class="label-sm" text-anchor="middle">iptables, ARP cache</text>
         <rect x="100" y="145" width="120" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
         <text x="160" y="170" class="label-code" text-anchor="middle">veth-a</text>
         <text x="160" y="210" class="label-sm" text-anchor="middle">10.0.0.1/24</text>
@@ -477,10 +477,10 @@
 
         <rect x="520" y="40" width="240" height="220" class="ns-box-alt"/>
         <text x="640" y="30" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">Network Namespace</text>
-        <use href="#rhi-container" x="599" y="52" width="18" height="18" style="fill:var(--accent3); opacity:0.7;"/>
-        <text x="640" y="72" class="label" text-anchor="middle">guest-b</text>
-        <text x="640" y="100" class="label-sm" text-anchor="middle">Completely isolated from</text>
-        <text x="640" y="116" class="label-sm" text-anchor="middle">host and other namespaces</text>
+        <use href="#rhi-container" x="605" y="48" width="30" height="30" style="fill:var(--accent3);"/>
+        <text x="640" y="92" class="label" text-anchor="middle">guest-b</text>
+        <text x="640" y="110" class="label-sm" text-anchor="middle">Completely isolated from</text>
+        <text x="640" y="124" class="label-sm" text-anchor="middle">host and other namespaces</text>
         <rect x="580" y="145" width="120" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
         <text x="640" y="170" class="label-code" text-anchor="middle" style="fill:var(--accent3);">veth-b</text>
         <text x="640" y="210" class="label-sm" text-anchor="middle">10.0.0.2/24</text>
@@ -505,25 +505,23 @@
     <div class="diagram">
       <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
         <rect x="40" y="20" width="200" height="140" class="ns-box"/>
-        <text x="140" y="10" class="label" text-anchor="middle" style="fill:var(--accent); font-size:12px;">Pod namespace</text>
-        <use href="#rhi-pod" x="101" y="32" width="18" height="18" style="fill:var(--accent); opacity:0.7;"/>
-        <text x="140" y="52" class="label" text-anchor="middle">Pod A</text>
-        <rect x="75" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="1.5"/>
+        <use href="#rhi-pod" x="105" y="24" width="36" height="36" style="fill:var(--accent);"/>
+        <text x="155" y="45" class="label" style="fill:var(--accent); font-size:12px;">Pod A</text>
+        <rect x="75" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
         <text x="140" y="93" class="label-code" text-anchor="middle" style="font-size:11px;">eth0 (veth end)</text>
 
         <rect x="300" y="20" width="200" height="140" class="ns-box-alt"/>
-        <text x="400" y="10" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">Pod namespace</text>
-        <use href="#rhi-pod" x="361" y="32" width="18" height="18" style="fill:var(--accent3); opacity:0.7;"/>
-        <text x="400" y="52" class="label" text-anchor="middle">Pod B</text>
-        <rect x="335" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
+        <use href="#rhi-pod" x="365" y="24" width="36" height="36" style="fill:var(--accent3);"/>
+        <text x="415" y="45" class="label" style="fill:var(--accent3); font-size:12px;">Pod B</text>
+        <rect x="335" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
         <text x="400" y="93" class="label-code" text-anchor="middle" style="fill:var(--accent3); font-size:11px;">eth0 (veth end)</text>
 
         <line x1="140" y1="105" x2="140" y2="195" class="veth-line"/>
         <line x1="400" y1="105" x2="400" y2="195" style="stroke:var(--accent3); stroke-width:3; stroke-dasharray:8 4;"/>
 
         <rect x="60" y="195" width="480" height="50" class="bridge-box"/>
-        <use href="#rhi-bridge" x="207" y="202" width="22" height="22" style="fill:var(--warn); opacity:0.8;"/>
-        <text x="300" y="225" class="label" text-anchor="middle" style="fill:var(--warn);">br-int / bridge / OVS</text>
+        <use href="#rhi-bridge" x="80" y="200" width="32" height="32" style="fill:var(--warn);"/>
+        <text x="310" y="225" class="label" text-anchor="middle" style="fill:var(--warn);">br-int / bridge / OVS</text>
 
         <line x1="300" y1="245" x2="300" y2="280" class="cable"/>
         <rect x="220" y="275" width="160" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
@@ -548,41 +546,40 @@
     <p class="subtitle">One bridge per VLAN &mdash; the simplest model</p>
     <div class="diagram">
       <svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2.5"/>
-        <use href="#rhi-bridge" x="35" y="148" width="20" height="20" style="fill:var(--vlan100); opacity:0.7;"/>
-        <text x="140" y="167" class="label" text-anchor="middle" style="fill:var(--vlan100);">br-100</text>
-        <rect x="290" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2.5"/>
-        <use href="#rhi-bridge" x="305" y="148" width="20" height="20" style="fill:var(--vlan200); opacity:0.7;"/>
-        <text x="410" y="167" class="label" text-anchor="middle" style="fill:var(--vlan200);">br-200</text>
-        <rect x="560" y="140" width="240" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2.5"/>
-        <use href="#rhi-bridge" x="575" y="148" width="20" height="20" style="fill:var(--vlan123); opacity:0.7;"/>
-        <text x="680" y="167" class="label" text-anchor="middle" style="fill:var(--vlan123);">br-123</text>
+        <rect x="20" y="140" width="240" height="45" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="3"/>
+        <use href="#rhi-bridge" x="30" y="146" width="28" height="28" style="fill:var(--vlan100);"/>
+        <text x="150" y="167" class="label" text-anchor="middle" style="fill:var(--vlan100);">br-100</text>
+        <rect x="290" y="140" width="240" height="45" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="3"/>
+        <use href="#rhi-bridge" x="300" y="146" width="28" height="28" style="fill:var(--vlan200);"/>
+        <text x="420" y="167" class="label" text-anchor="middle" style="fill:var(--vlan200);">br-200</text>
+        <rect x="560" y="140" width="240" height="45" rx="8" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="3"/>
+        <use href="#rhi-bridge" x="570" y="146" width="28" height="28" style="fill:var(--vlan123);"/>
+        <text x="690" y="167" class="label" text-anchor="middle" style="fill:var(--vlan123);">br-123</text>
 
-        <rect x="50" y="30" width="100" height="55" class="ns-box"/>
-        <text x="100" y="55" class="label" text-anchor="middle" style="font-size:13px;">guest-a</text>
-        <text x="100" y="73" class="label-sm" text-anchor="middle">.0.100.1</text>
-        <line x1="100" y1="85" x2="100" y2="140" class="cable" style="stroke:var(--vlan100);"/>
+        <use href="#rhi-container" x="78" y="30" width="44" height="44" style="fill:var(--accent);"/>
+        <text x="100" y="84" class="label" text-anchor="middle" style="font-size:12px;">guest-a</text>
+        <text x="100" y="98" class="label-sm" text-anchor="middle">.0.100.1</text>
+        <line x1="100" y1="108" x2="100" y2="140" class="cable" style="stroke:var(--vlan100);"/>
 
-        <rect x="180" y="30" width="100" height="55" class="ns-box"/>
-        <text x="230" y="55" class="label" text-anchor="middle" style="font-size:13px;">guest-c</text>
-        <text x="230" y="73" class="label-sm" text-anchor="middle">.0.100.3</text>
-        <line x1="230" y1="85" x2="230" y2="140" class="cable" style="stroke:var(--vlan100);"/>
+        <use href="#rhi-container" x="208" y="30" width="44" height="44" style="fill:var(--accent);"/>
+        <text x="230" y="84" class="label" text-anchor="middle" style="font-size:12px;">guest-c</text>
+        <text x="230" y="98" class="label-sm" text-anchor="middle">.0.100.3</text>
+        <line x1="230" y1="108" x2="230" y2="140" class="cable" style="stroke:var(--vlan100);"/>
 
-        <rect x="360" y="30" width="100" height="55" class="ns-box-alt"/>
-        <text x="410" y="55" class="label" text-anchor="middle" style="font-size:13px;">guest-b</text>
-        <text x="410" y="73" class="label-sm" text-anchor="middle">.0.200.1</text>
-        <line x1="410" y1="85" x2="410" y2="140" class="cable" style="stroke:var(--vlan200);"/>
+        <use href="#rhi-container" x="388" y="30" width="44" height="44" style="fill:var(--accent3);"/>
+        <text x="410" y="84" class="label" text-anchor="middle" style="font-size:12px;">guest-b</text>
+        <text x="410" y="98" class="label-sm" text-anchor="middle">.0.200.1</text>
+        <line x1="410" y1="108" x2="410" y2="140" class="cable" style="stroke:var(--vlan200);"/>
 
-        <rect x="160" y="225" width="400" height="65" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <use href="#rhi-firewall" x="283" y="232" width="20" height="20" style="fill:var(--danger); opacity:0.8;"/>
-        <text x="360" y="250" class="label" text-anchor="middle" style="fill:var(--danger);">Firewall VM</text>
-        <text x="360" y="272" class="label-sm" text-anchor="middle">Needs one NIC per VLAN &mdash; cannot use a single 802.1Q trunk</text>
-        <line x1="200" y1="225" x2="100" y2="185" class="cable" style="stroke:var(--vlan100); stroke-dasharray:4 3;"/>
-        <line x1="360" y1="225" x2="410" y2="185" class="cable" style="stroke:var(--vlan200); stroke-dasharray:4 3;"/>
-        <line x1="510" y1="225" x2="680" y2="185" class="cable" style="stroke:var(--vlan123); stroke-dasharray:4 3;"/>
-        <text x="200" y="218" class="label-sm" text-anchor="middle">NIC 1</text>
-        <text x="360" y="218" class="label-sm" text-anchor="middle">NIC 2</text>
-        <text x="510" y="218" class="label-sm" text-anchor="middle">NIC 3</text>
+        <use href="#rhi-firewall" x="300" y="225" width="48" height="48" style="fill:var(--danger);"/>
+        <text x="400" y="248" class="label" text-anchor="middle" style="fill:var(--danger);">Firewall VM</text>
+        <text x="400" y="268" class="label-sm" text-anchor="middle">Needs one NIC per VLAN &mdash; cannot use a single 802.1Q trunk</text>
+        <line x1="310" y1="273" x2="100" y2="185" class="cable" style="stroke:var(--vlan100); stroke-dasharray:4 3;"/>
+        <line x1="330" y1="273" x2="410" y2="185" class="cable" style="stroke:var(--vlan200); stroke-dasharray:4 3;"/>
+        <line x1="348" y1="260" x2="680" y2="185" class="cable" style="stroke:var(--vlan123); stroke-dasharray:4 3;"/>
+        <text x="200" y="225" class="label-sm" text-anchor="middle">NIC 1</text>
+        <text x="365" y="288" class="label-sm" text-anchor="middle">NIC 2</text>
+        <text x="520" y="222" class="label-sm" text-anchor="middle">NIC 3</text>
 
         <text x="165" y="108" class="label" text-anchor="middle" style="fill:var(--success); font-size:16px;">&#x2713;</text>
         <text x="275" y="108" class="label" text-anchor="middle" style="fill:var(--danger); font-size:16px;">&#x2715;</text>
@@ -609,13 +606,13 @@
     <div class="diagram">
       <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
         <rect x="100" y="170" width="600" height="55" class="bridge-box"/>
-        <use href="#rhi-bridge" x="290" y="177" width="22" height="22" style="fill:var(--warn); opacity:0.8;"/>
-        <text x="400" y="195" class="label" text-anchor="middle" style="fill:var(--warn); font-size:16px;">br-trunk</text>
+        <use href="#rhi-bridge" x="115" y="175" width="36" height="36" style="fill:var(--warn);"/>
+        <text x="420" y="200" class="label" text-anchor="middle" style="fill:var(--warn); font-size:16px;">br-trunk</text>
         <text x="400" y="212" class="label-sm" text-anchor="middle">vlan_filtering 1</text>
 
         <rect x="50" y="20" width="170" height="105" class="ns-box"/>
-        <use href="#rhi-firewall" x="60" y="26" width="16" height="16" style="fill:var(--accent); opacity:0.7;"/>
-        <text x="135" y="42" class="label" text-anchor="middle" style="font-size:14px;">guest-a (firewall)</text>
+        <use href="#rhi-firewall" x="54" y="22" width="30" height="30" style="fill:var(--accent);"/>
+        <text x="143" y="42" class="label" text-anchor="middle" style="font-size:13px;">guest-a (firewall)</text>
         <text x="135" y="64" class="label-sm" text-anchor="middle">single NIC &mdash; sees tagged frames</text>
         <rect x="74" y="78" width="55" height="24" rx="4" fill="var(--vlan100)" opacity="0.3" stroke="var(--vlan100)" stroke-width="1.5"/>
         <text x="101" y="95" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">.100</text>
@@ -816,33 +813,29 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram" style="margin-top:0.6em;">
       <svg viewBox="0 0 800 230" xmlns="http://www.w3.org/2000/svg">
         <rect x="80" y="130" width="640" height="48" class="bridge-box"/>
-        <use href="#rhi-bridge" x="265" y="137" width="20" height="20" style="fill:var(--warn); opacity:0.8;"/>
-        <text x="400" y="152" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-trunk (vlan_filtering 1)</text>
-        <text x="400" y="168" class="label-sm" text-anchor="middle">Per-port VLAN allow-lists &mdash; this is what Bridge CNI does on OCP</text>
+        <use href="#rhi-bridge" x="92" y="133" width="36" height="36" style="fill:var(--warn);"/>
+        <text x="420" y="152" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-trunk (vlan_filtering 1)</text>
+        <text x="420" y="168" class="label-sm" text-anchor="middle">Per-port VLAN allow-lists &mdash; this is what Bridge CNI does on OCP</text>
 
-        <rect x="60" y="15" width="140" height="75" rx="6" fill="#1f1515" stroke="var(--danger)" stroke-width="1.5"/>
-        <use href="#rhi-firewall" x="73" y="24" width="14" height="14" style="fill:var(--danger); opacity:0.7;"/>
-        <text x="130" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:12px;">fw-dmz</text>
-        <text x="130" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 100,200</text>
-        <line x1="130" y1="90" x2="130" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
+        <use href="#rhi-firewall" x="98" y="12" width="36" height="36" style="fill:var(--danger);"/>
+        <text x="130" y="58" class="label" text-anchor="middle" style="fill:var(--danger); font-size:12px;">fw-dmz</text>
+        <text x="130" y="72" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 100,200</text>
+        <line x1="130" y1="82" x2="130" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
 
-        <rect x="230" y="15" width="140" height="75" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
-        <use href="#rhi-firewall" x="243" y="24" width="14" height="14" style="fill:var(--vlan123); opacity:0.7;"/>
-        <text x="300" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:12px;">fw-internal</text>
-        <text x="300" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 123,150</text>
-        <line x1="300" y1="90" x2="300" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
+        <use href="#rhi-firewall" x="268" y="12" width="36" height="36" style="fill:var(--vlan123);"/>
+        <text x="300" y="58" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:12px;">fw-internal</text>
+        <text x="300" y="72" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 123,150</text>
+        <line x1="300" y1="82" x2="300" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
 
-        <rect x="410" y="15" width="140" height="75" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
-        <use href="#rhi-network" x="423" y="24" width="14" height="14" style="fill:var(--accent3); opacity:0.7;"/>
-        <text x="480" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">monitor</text>
-        <text x="480" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">all VLANs</text>
-        <line x1="480" y1="90" x2="480" y2="130" style="stroke:var(--accent3); stroke-width:2.5;"/>
+        <use href="#rhi-network" x="448" y="12" width="36" height="36" style="fill:var(--accent3);"/>
+        <text x="480" y="58" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">monitor</text>
+        <text x="480" y="72" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">all VLANs</text>
+        <line x1="480" y1="82" x2="480" y2="130" style="stroke:var(--accent3); stroke-width:2.5;"/>
 
-        <rect x="590" y="15" width="140" height="75" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <use href="#rhi-server" x="603" y="24" width="14" height="14" style="fill:var(--vlan100); opacity:0.7;"/>
-        <text x="660" y="38" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a</text>
-        <text x="660" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">access 100</text>
-        <line x1="660" y1="90" x2="660" y2="130" style="stroke:var(--accent); stroke-width:2.5;"/>
+        <use href="#rhi-server" x="628" y="12" width="36" height="36" style="fill:var(--vlan100);"/>
+        <text x="660" y="58" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a</text>
+        <text x="660" y="72" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">access 100</text>
+        <line x1="660" y1="82" x2="660" y2="130" style="stroke:var(--accent); stroke-width:2.5;"/>
 
         <text x="220" y="45" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">&#x2715;</text>
 
@@ -895,7 +888,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram">
       <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
         <rect x="200" y="10" width="400" height="50" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <use href="#rhi-vm" x="283" y="16" width="20" height="20" style="fill:var(--danger); opacity:0.7;"/>
+        <use href="#rhi-vm" x="218" y="10" width="36" height="36" style="fill:var(--danger);"/>
         <text x="400" y="32" class="label" text-anchor="middle" style="fill:var(--danger);">KubeVirt VM (fw-dmz)</text>
         <text x="400" y="50" class="label-sm" text-anchor="middle">eth1.100, eth1.200 &mdash; VLAN sub-interfaces</text>
 
@@ -915,11 +908,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <rect x="140" y="196" width="520" height="48" rx="8"/>
         <rect x="140" y="196" width="260" height="48" rx="8" fill="#292929" stroke="var(--warn)" stroke-width="2"/>
-        <use href="#rhi-bridge" x="152" y="202" width="18" height="18" style="fill:var(--warn); opacity:0.7;"/>
+        <use href="#rhi-bridge" x="148" y="198" width="30" height="30" style="fill:var(--warn);"/>
         <text x="270" y="216" class="label" text-anchor="middle" style="fill:var(--warn); font-size:13px;">Linux bridge br-secondary</text>
         <text x="270" y="234" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Bridge CNI vlanTrunk</text>
-        <rect x="400" y="196" width="260" height="48" rx="8" fill="#1f1f1f" stroke="var(--accent2)" stroke-width="2"/>
-        <text x="530" y="216" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:13px;">OVS bridge</text>
+        <rect x="400" y="196" width="260" height="48" rx="8" fill="#1f1f1f" stroke="var(--accent2)" stroke-width="3"/>
+        <use href="#rhi-bridge" x="408" y="198" width="30" height="30" style="fill:var(--accent2);"/>
+        <text x="540" y="216" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:13px;">OVS bridge</text>
         <text x="530" y="234" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Localnet CUDN</text>
 
         <line x1="400" y1="244" x2="400" y2="268" style="stroke:var(--fg-dim); stroke-width:2;"/>
@@ -1265,12 +1259,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram">
       <svg viewBox="0 0 800 270" xmlns="http://www.w3.org/2000/svg">
         <rect x="80" y="140" width="640" height="48" class="bridge-box"/>
-        <use href="#rhi-bridge" x="232" y="147" width="18" height="18" style="fill:var(--warn); opacity:0.8;"/>
+        <use href="#rhi-bridge" x="93" y="142" width="32" height="32" style="fill:var(--warn);"/>
         <text x="400" y="162" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-secondary (Linux bridge, vlan_filtering)</text>
         <text x="400" y="178" class="label-sm" text-anchor="middle">NMState NNCP with trunk-tags on ens4</text>
 
         <rect x="70" y="15" width="200" height="85" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <use href="#rhi-vm" x="80" y="22" width="16" height="16" style="fill:var(--danger); opacity:0.7;"/>
+        <use href="#rhi-vm" x="78" y="18" width="28" height="28" style="fill:var(--danger);"/>
         <text x="170" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="170" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; single trunk NIC</text>
         <rect x="100" y="64" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
@@ -1281,7 +1275,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <line x1="170" y1="100" x2="170" y2="140" style="stroke:var(--warn); stroke-width:2.5;"/>
 
         <rect x="310" y="15" width="200" height="85" rx="8" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2"/>
-        <use href="#rhi-vm" x="320" y="22" width="16" height="16" style="fill:var(--vlan123); opacity:0.7;"/>
+        <use href="#rhi-vm" x="318" y="18" width="28" height="28" style="fill:var(--vlan123);"/>
         <text x="410" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:13px;">fw-internal VM</text>
         <text x="410" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; single trunk NIC</text>
         <rect x="345" y="64" width="50" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
@@ -1292,7 +1286,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <line x1="410" y1="100" x2="410" y2="140" style="stroke:var(--warn); stroke-width:2.5;"/>
 
         <rect x="550" y="15" width="190" height="85" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
-        <use href="#rhi-vm" x="560" y="22" width="16" height="16" style="fill:var(--accent3); opacity:0.7;"/>
+        <use href="#rhi-vm" x="558" y="18" width="28" height="28" style="fill:var(--accent3);"/>
         <text x="645" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">monitor VM</text>
         <text x="645" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; all VLANs</text>
         <rect x="570" y="64" width="28" height="16" rx="2" fill="var(--vlan100)" opacity="0.4"/>
@@ -1370,7 +1364,8 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram">
       <svg viewBox="0 0 800 250" xmlns="http://www.w3.org/2000/svg">
         <rect x="80" y="140" width="640" height="48" class="ovs-box"/>
-        <text x="400" y="162" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:15px;">ovs-bridge-trunk (OVS, bridge-mappings)</text>
+        <use href="#rhi-bridge" x="93" y="142" width="32" height="32" style="fill:var(--accent2);"/>
+        <text x="420" y="162" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:15px;">ovs-bridge-trunk (OVS, bridge-mappings)</text>
         <text x="400" y="178" class="label-sm" text-anchor="middle">NMState NNCP with ovn.bridge-mappings</text>
 
         <rect x="100" y="15" width="180" height="85" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
@@ -1538,7 +1533,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="28" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
         <rect x="40" y="40" width="210" height="120" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <use href="#rhi-vm" x="52" y="47" width="16" height="16" style="fill:var(--danger); opacity:0.7;"/>
+        <use href="#rhi-vm" x="48" y="42" width="28" height="28" style="fill:var(--danger);"/>
         <text x="145" y="62" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="145" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 100 (untagged)</text>
         <text x="145" y="95" class="label-sm" text-anchor="middle">eth2: VLAN 200 (untagged)</text>
@@ -1546,14 +1541,14 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="145" y="150" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
 
         <rect x="290" y="40" width="200" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
-        <use href="#rhi-vm" x="302" y="47" width="16" height="16" style="fill:var(--vlan100); opacity:0.7;"/>
+        <use href="#rhi-vm" x="298" y="42" width="28" height="28" style="fill:var(--vlan100);"/>
         <text x="390" y="62" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="390" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 100 (untagged)</text>
         <text x="390" y="100" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100</text>
         <text x="390" y="150" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
 
         <rect x="530" y="40" width="200" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
-        <use href="#rhi-vm" x="542" y="47" width="16" height="16" style="fill:var(--vlan200); opacity:0.7;"/>
+        <use href="#rhi-vm" x="538" y="42" width="28" height="28" style="fill:var(--vlan200);"/>
         <text x="630" y="62" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="630" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 200 (untagged)</text>
         <text x="630" y="100" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan200</text>
@@ -1564,7 +1559,8 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <line x1="630" y1="160" x2="630" y2="195" style="stroke:var(--vlan200); stroke-width:2;"/>
 
         <rect x="60" y="195" width="680" height="44" class="ovs-box"/>
-        <text x="400" y="215" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:14px;">ovs-bridge-trunk (single OVS bridge)</text>
+        <use href="#rhi-bridge" x="72" y="197" width="30" height="30" style="fill:var(--accent2);"/>
+        <text x="420" y="215" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:14px;">ovs-bridge-trunk (single OVS bridge)</text>
         <text x="400" y="230" class="label-sm" text-anchor="middle">All VMs attach via Localnet CUDNs</text>
 
         <line x1="400" y1="239" x2="400" y2="260" class="cable"/>
@@ -1586,7 +1582,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="25" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
         <rect x="30" y="35" width="200" height="110" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <use href="#rhi-firewall" x="42" y="42" width="16" height="16" style="fill:var(--danger); opacity:0.7;"/>
+        <use href="#rhi-firewall" x="38" y="36" width="28" height="28" style="fill:var(--danger);"/>
         <text x="130" y="58" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="130" y="76" class="label-sm" text-anchor="middle">eth1: trunk 100,200</text>
         <text x="130" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">Bridge CNI vlanTrunk NAD</text>
@@ -1594,14 +1590,14 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="130" y="132" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:8px;">Policy: the appliance itself</text>
 
         <rect x="370" y="35" width="180" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
-        <use href="#rhi-vm" x="382" y="42" width="16" height="16" style="fill:var(--vlan100); opacity:0.7;"/>
+        <use href="#rhi-vm" x="378" y="36" width="28" height="28" style="fill:var(--vlan100);"/>
         <text x="460" y="58" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="460" y="76" class="label-sm" text-anchor="middle">eth1: VLAN 100 untag</text>
         <text x="460" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100</text>
         <text x="460" y="118" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:8px;">NetworkPolicy: &#x2713;</text>
 
         <rect x="580" y="35" width="180" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
-        <use href="#rhi-vm" x="592" y="42" width="16" height="16" style="fill:var(--vlan200); opacity:0.7;"/>
+        <use href="#rhi-vm" x="588" y="36" width="28" height="28" style="fill:var(--vlan200);"/>
         <text x="670" y="58" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="670" y="76" class="label-sm" text-anchor="middle">eth1: VLAN 200 untag</text>
         <text x="670" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan200</text>
@@ -1611,11 +1607,13 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <line x1="460" y1="145" x2="460" y2="175" style="stroke:var(--vlan100); stroke-width:2;"/>
         <line x1="670" y1="145" x2="670" y2="175" style="stroke:var(--vlan200); stroke-width:2;"/>
 
-        <rect x="30" y="175" width="200" height="36" class="bridge-box" style="stroke-width:2;"/>
-        <text x="130" y="198" class="label-sm" text-anchor="middle" style="fill:var(--warn);">br-secondary (Linux)</text>
+        <rect x="30" y="175" width="200" height="36" class="bridge-box" style="stroke-width:2.5;"/>
+        <use href="#rhi-bridge" x="36" y="178" width="24" height="24" style="fill:var(--warn);"/>
+        <text x="145" y="198" class="label-sm" text-anchor="middle" style="fill:var(--warn);">br-secondary (Linux)</text>
 
-        <rect x="370" y="175" width="390" height="36" class="ovs-box" style="stroke-width:2;"/>
-        <text x="565" y="198" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">ovs-bridge-trunk (OVS)</text>
+        <rect x="370" y="175" width="390" height="36" class="ovs-box" style="stroke-width:2.5;"/>
+        <use href="#rhi-bridge" x="376" y="178" width="24" height="24" style="fill:var(--accent2);"/>
+        <text x="580" y="198" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">ovs-bridge-trunk (OVS)</text>
 
         <line x1="130" y1="211" x2="130" y2="240" class="cable"/>
         <rect x="70" y="240" width="120" height="24" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
@@ -1654,7 +1652,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <!-- ========== FIREWALL VM ========== -->
         <rect x="25" y="50" width="400" height="160" rx="10" fill="#1f1515" stroke="var(--danger)" stroke-width="2.5"/>
-        <use href="#rhi-firewall" x="133" y="54" width="18" height="18" style="fill:var(--danger); opacity:0.8;"/>
+        <use href="#rhi-firewall" x="127" y="48" width="32" height="32" style="fill:var(--danger);"/>
         <text x="225" y="70" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">fw-dmz VM (firewall)</text>
         <text x="225" y="85" class="label-sm" text-anchor="middle" style="fill:var(--accent); font-size:9px;">routes internal ↔ external</text>
 
@@ -1699,7 +1697,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <!-- ========== TENANT VMs ========== -->
         <rect x="480" y="50" width="170" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
-        <use href="#rhi-vm" x="490" y="56" width="14" height="14" style="fill:var(--vlan100); opacity:0.7;"/>
+        <use href="#rhi-vm" x="486" y="50" width="28" height="28" style="fill:var(--vlan100);"/>
         <text x="565" y="70" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a VM</text>
         <text x="565" y="86" class="label-sm" text-anchor="middle" style="font-size:9px;">eth1: VLAN 100 untag</text>
         <text x="565" y="100" class="label-code" text-anchor="middle" style="font-size:8px;">cudn-internal-100</text>
@@ -1707,7 +1705,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="565" y="142" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:7px;">No external access</text>
 
         <rect x="690" y="50" width="170" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
-        <use href="#rhi-vm" x="700" y="56" width="14" height="14" style="fill:var(--vlan200); opacity:0.7;"/>
+        <use href="#rhi-vm" x="696" y="50" width="28" height="28" style="fill:var(--vlan200);"/>
         <text x="775" y="70" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:12px;">tenant-b VM</text>
         <text x="775" y="86" class="label-sm" text-anchor="middle" style="font-size:9px;">eth1: VLAN 200 untag</text>
         <text x="775" y="100" class="label-code" text-anchor="middle" style="font-size:8px;">cudn-internal-200</text>
@@ -1735,11 +1733,13 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <!-- ========== BRIDGES ========== -->
         <rect x="25" y="230" width="175" height="34" class="bridge-box" style="stroke-width:2.5;"/>
-        <text x="112" y="248" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:10px; font-weight:600;">br-external (Linux bridge)</text>
-        <text x="112" y="260" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">Bond B</text>
+        <use href="#rhi-bridge" x="30" y="232" width="24" height="24" style="fill:var(--warn);"/>
+        <text x="125" y="248" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:10px; font-weight:600;">br-external (Linux)</text>
+        <text x="125" y="260" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">Bond B</text>
 
         <rect x="230" y="230" width="630" height="34" class="ovs-box" style="stroke-width:2.5;"/>
-        <text x="545" y="248" class="label-sm" text-anchor="middle" style="fill:var(--accent2); font-size:10px; font-weight:600;">ovs-bridge-internal (OVS)</text>
+        <use href="#rhi-bridge" x="236" y="232" width="24" height="24" style="fill:var(--accent2);"/>
+        <text x="555" y="248" class="label-sm" text-anchor="middle" style="fill:var(--accent2); font-size:10px; font-weight:600;">ovs-bridge-internal (OVS)</text>
         <text x="545" y="260" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">Bond A • Localnet CUDNs • OVN manages flows</text>
 
         <!-- ========== NICs ========== -->

@@ -3,42 +3,42 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Linux Networking &amp; KubeVirt VLAN Trunks</title>
+<title>Linux Networking &amp; KubeVirt VLAN Trunks — Red Hat</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
-<link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;700;800&family=Source+Code+Pro:wght@400;600&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;500;600;700;800;900&family=Red+Hat+Text:wght@300;400;500;600;700&family=Red+Hat+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/theme/black.css" id="theme">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/plugin/highlight/monokai.css">
 <style>
 :root {
-  --bg: #080c18;
-  --bg-card: #0f1628;
-  --bg-card-alt: #141c32;
-  --fg: #d8dce8;
-  --fg-dim: #7882a0;
-  --accent: #00d4aa;
-  --accent2: #ff6b35;
-  --accent3: #6c8cff;
-  --vlan100: #4ea8de;
-  --vlan200: #ff8c42;
-  --vlan123: #48c774;
-  --vlan150: #b07cd8;
-  --vlan300: #f06292;
-  --danger: #ff4757;
-  --success: #00d4aa;
-  --warn: #ffc048;
+  --bg: #151515;
+  --bg-card: #1f1f1f;
+  --bg-card-alt: #292929;
+  --fg: #e0e0e0;
+  --fg-dim: #a3a3a3;
+  --accent: #ee0000;
+  --accent2: #f5921b;
+  --accent3: #0066cc;
+  --vlan100: #4394e5;
+  --vlan200: #f8ae54;
+  --vlan123: #37a3a3;
+  --vlan150: #5e40be;
+  --vlan300: #f4784a;
+  --danger: #f0561d;
+  --success: #63993d;
+  --warn: #dca614;
 }
 
 .reveal-viewport { background: var(--bg); }
 
 .reveal {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 300;
+  font-family: 'Red Hat Text', sans-serif;
+  font-weight: 400;
   color: var(--fg);
   font-size: 28px;
 }
 .reveal h1, .reveal h2, .reveal h3, .reveal h4 {
-  font-family: 'Outfit', sans-serif;
+  font-family: 'Red Hat Display', sans-serif;
   font-weight: 700;
   color: #fff;
   text-transform: none;
@@ -48,11 +48,11 @@
 .reveal h2 { font-size: 1.5em; margin-bottom: 0.2em; }
 .reveal h3 { font-size: 1.2em; color: var(--accent); }
 .reveal code, .reveal pre {
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Red Hat Mono', monospace;
 }
 .reveal pre {
   background: var(--bg-card);
-  border: 1px solid #1e2844;
+  border: 1px solid #383838;
   border-radius: 8px;
   padding: 0.7em 1em;
   font-size: 0.6em;
@@ -75,8 +75,8 @@
 
 .phase-badge {
   display: inline-block;
-  background: linear-gradient(135deg, var(--accent), #00a88a);
-  color: var(--bg);
+  background: linear-gradient(135deg, var(--accent), #a60000);
+  color: #fff;
   font-weight: 700;
   font-size: 0.55em;
   padding: 0.2em 0.7em;
@@ -85,10 +85,10 @@
   letter-spacing: 0.04em;
   text-transform: uppercase;
 }
-.phase-badge.p2 { background: linear-gradient(135deg, var(--accent3), #4060cc); }
-.phase-badge.p3 { background: linear-gradient(135deg, var(--accent2), #cc4800); }
-.phase-badge.p4 { background: linear-gradient(135deg, var(--vlan150), #8050b0); }
-.phase-badge.p5 { background: linear-gradient(135deg, var(--vlan100), #2070b0); }
+.phase-badge.p2 { background: linear-gradient(135deg, var(--accent3), #004d99); }
+.phase-badge.p3 { background: linear-gradient(135deg, var(--accent2), #9e4a06); }
+.phase-badge.p4 { background: linear-gradient(135deg, var(--vlan150), #3d2785); }
+.phase-badge.p5 { background: linear-gradient(135deg, var(--vlan123), #147878); }
 
 .subtitle {
   color: var(--fg-dim);
@@ -113,16 +113,16 @@
 /* Network element styles used in SVG */
 .ns-box { fill: var(--bg-card); stroke: var(--accent); stroke-width: 2; rx: 8; }
 .ns-box-alt { fill: var(--bg-card); stroke: var(--accent3); stroke-width: 2; rx: 8; }
-.bridge-box { fill: #1a2440; stroke: var(--warn); stroke-width: 2.5; rx: 6; }
-.ovs-box { fill: #1a1830; stroke: var(--accent2); stroke-width: 2.5; rx: 6; }
+.bridge-box { fill: #292929; stroke: var(--warn); stroke-width: 2.5; rx: 6; }
+.ovs-box { fill: #292929; stroke: var(--accent2); stroke-width: 2.5; rx: 6; }
 .veth-line { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 8 4; }
 .cable { stroke: var(--fg-dim); stroke-width: 2; }
 .cable-tagged { stroke-width: 3; }
-.label { font-family: 'Outfit', sans-serif; fill: #fff; font-size: 14px; font-weight: 600; }
-.label-sm { font-family: 'Source Code Pro', monospace; fill: var(--fg-dim); font-size: 11px; }
-.label-code { font-family: 'Source Code Pro', monospace; fill: var(--accent); font-size: 12px; }
+.label { font-family: 'Red Hat Display', sans-serif; fill: #fff; font-size: 14px; font-weight: 600; }
+.label-sm { font-family: 'Red Hat Mono', monospace; fill: var(--fg-dim); font-size: 11px; }
+.label-code { font-family: 'Red Hat Mono', monospace; fill: var(--accent); font-size: 12px; }
 .vlan-tag {
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Red Hat Mono', monospace;
   font-size: 10px;
   font-weight: 600;
 }
@@ -137,7 +137,7 @@
 .compare-grid.three { grid-template-columns: 1fr 1fr 1fr; }
 .compare-card {
   background: var(--bg-card);
-  border: 1px solid #1e2844;
+  border: 1px solid #383838;
   border-radius: 12px;
   padding: 1.2em;
 }
@@ -157,7 +157,7 @@
   font-size: 0.7em;
   font-weight: 600;
   margin: 0.1em;
-  font-family: 'Source Code Pro', monospace;
+  font-family: 'Red Hat Mono', monospace;
 }
 .chip.v100 { background: var(--vlan100); color: #000; }
 .chip.v200 { background: var(--vlan200); color: #000; }
@@ -183,11 +183,11 @@
   font-weight: 600;
   text-align: left;
   padding: 0.6em 0.8em;
-  border-bottom: 2px solid #1e2844;
+  border-bottom: 2px solid #383838;
 }
 .reveal table td {
   padding: 0.5em 0.8em;
-  border-bottom: 1px solid #1a2040;
+  border-bottom: 1px solid #292929;
   color: var(--fg);
 }
 .reveal table tr:last-child td { border-bottom: none; }
@@ -226,8 +226,8 @@
 
 /* Key takeaway box */
 .takeaway {
-  background: linear-gradient(135deg, rgba(0,212,170,0.08), rgba(0,212,170,0.02));
-  border: 1px solid rgba(0,212,170,0.3);
+  background: linear-gradient(135deg, rgba(238,0,0,0.08), rgba(238,0,0,0.02));
+  border: 1px solid rgba(238,0,0,0.3);
   border-radius: 8px;
   padding: 0.8em 1.2em;
   margin: 0.8em 0;
@@ -281,7 +281,7 @@
 .reveal .controls { color: var(--accent); }
 
 /* Slide number */
-.reveal .slide-number { color: var(--fg-dim); font-family: 'Source Code Pro', monospace; font-size: 14px; }
+.reveal .slide-number { color: var(--fg-dim); font-family: 'Red Hat Mono', monospace; font-size: 14px; }
 
 /* Phase title slides */
 .phase-title {
@@ -366,9 +366,12 @@
 <!-- TITLE -->
 <!-- ============================================================ -->
 <section>
-  <section data-background="linear-gradient(135deg, #080c18 0%, #0f1a30 50%, #0a1428 100%)">
-    <div style="text-align:center; padding-top:1em;">
-      <h1 style="font-size:2.2em; line-height:1.15;">Linux Networking<br>&amp; KubeVirt<br><span style="color:var(--accent);">VLAN Trunks</span></h1>
+  <section data-background="linear-gradient(135deg, #151515 0%, #1f1f1f 50%, #151515 100%)">
+    <div style="text-align:center; padding-top:0.5em;">
+      <div style="margin-bottom:0.8em;">
+        <span style="font-family:'Red Hat Display',sans-serif; font-weight:700; font-size:1.4em; color:#ee0000; letter-spacing:-0.02em;">Red Hat</span>
+      </div>
+      <h1 style="font-size:2.2em; line-height:1.15;">Linux networking<br>&amp; KubeVirt<br><span style="color:var(--accent);">VLAN trunks</span></h1>
       <p style="color:var(--fg-dim); font-size:0.7em; margin-top:1em;">
         From veth pairs to the Internal/External Boundary architecture on OCP 4.21
       </p>
@@ -429,11 +432,11 @@
         <text x="160" y="72" class="label" text-anchor="middle">guest-a</text>
         <text x="160" y="100" class="label-sm" text-anchor="middle">Own interfaces, routes,</text>
         <text x="160" y="116" class="label-sm" text-anchor="middle">iptables, ARP cache</text>
-        <rect x="100" y="145" width="120" height="40" rx="6" fill="#0d2818" stroke="var(--accent)" stroke-width="2"/>
+        <rect x="100" y="145" width="120" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
         <text x="160" y="170" class="label-code" text-anchor="middle">veth-a</text>
         <text x="160" y="210" class="label-sm" text-anchor="middle">10.0.0.1/24</text>
         <line x1="160" y1="185" x2="160" y2="275" class="veth-line"/>
-        <rect x="100" y="260" width="120" height="30" rx="6" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="100" y="260" width="120" height="30" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="160" y="280" class="label-sm" text-anchor="middle" style="fill:#fff;">veth-a-br</text>
 
         <rect x="520" y="40" width="240" height="220" class="ns-box-alt"/>
@@ -441,11 +444,11 @@
         <text x="640" y="72" class="label" text-anchor="middle">guest-b</text>
         <text x="640" y="100" class="label-sm" text-anchor="middle">Completely isolated from</text>
         <text x="640" y="116" class="label-sm" text-anchor="middle">host and other namespaces</text>
-        <rect x="580" y="145" width="120" height="40" rx="6" fill="#0d1828" stroke="var(--accent3)" stroke-width="2"/>
+        <rect x="580" y="145" width="120" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
         <text x="640" y="170" class="label-code" text-anchor="middle" style="fill:var(--accent3);">veth-b</text>
         <text x="640" y="210" class="label-sm" text-anchor="middle">10.0.0.2/24</text>
         <line x1="640" y1="185" x2="640" y2="275" style="stroke:var(--accent3); stroke-width:3; stroke-dasharray:8 4;"/>
-        <rect x="580" y="260" width="120" height="30" rx="6" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="580" y="260" width="120" height="30" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="640" y="280" class="label-sm" text-anchor="middle" style="fill:#fff;">veth-b-br</text>
 
         <text x="400" y="280" class="label" text-anchor="middle" style="fill:var(--danger); font-size:16px;">&#x2715; no path</text>
@@ -467,13 +470,13 @@
         <rect x="40" y="20" width="200" height="140" class="ns-box"/>
         <text x="140" y="10" class="label" text-anchor="middle" style="fill:var(--accent); font-size:12px;">Pod namespace</text>
         <text x="140" y="52" class="label" text-anchor="middle">Pod A</text>
-        <rect x="75" y="70" width="130" height="35" rx="6" fill="#0d2818" stroke="var(--accent)" stroke-width="1.5"/>
+        <rect x="75" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="1.5"/>
         <text x="140" y="93" class="label-code" text-anchor="middle" style="font-size:11px;">eth0 (veth end)</text>
 
         <rect x="300" y="20" width="200" height="140" class="ns-box-alt"/>
         <text x="400" y="10" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">Pod namespace</text>
         <text x="400" y="52" class="label" text-anchor="middle">Pod B</text>
-        <rect x="335" y="70" width="130" height="35" rx="6" fill="#0d1828" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="335" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="400" y="93" class="label-code" text-anchor="middle" style="fill:var(--accent3); font-size:11px;">eth0 (veth end)</text>
 
         <line x1="140" y1="105" x2="140" y2="195" class="veth-line"/>
@@ -483,7 +486,7 @@
         <text x="300" y="225" class="label" text-anchor="middle" style="fill:var(--warn);">br-int / bridge / OVS</text>
 
         <line x1="300" y1="245" x2="300" y2="280" class="cable"/>
-        <rect x="220" y="275" width="160" height="30" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="220" y="275" width="160" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="300" y="295" class="label-sm" text-anchor="middle" style="fill:#fff;">Physical NIC / Tunnel</text>
 
         <text x="620" y="60" class="label-sm" style="fill:var(--fg-dim);">Container runtime:</text>
@@ -505,11 +508,11 @@
     <p class="subtitle">One bridge per VLAN &mdash; the simplest model</p>
     <div class="diagram">
       <svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg">
-        <rect x="20" y="140" width="240" height="45" rx="6" fill="#0d1830" stroke="var(--vlan100)" stroke-width="2.5"/>
+        <rect x="20" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2.5"/>
         <text x="140" y="167" class="label" text-anchor="middle" style="fill:var(--vlan100);">br-100</text>
-        <rect x="290" y="140" width="240" height="45" rx="6" fill="#1a1410" stroke="var(--vlan200)" stroke-width="2.5"/>
+        <rect x="290" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2.5"/>
         <text x="410" y="167" class="label" text-anchor="middle" style="fill:var(--vlan200);">br-200</text>
-        <rect x="560" y="140" width="240" height="45" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="2.5"/>
+        <rect x="560" y="140" width="240" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2.5"/>
         <text x="680" y="167" class="label" text-anchor="middle" style="fill:var(--vlan123);">br-123</text>
 
         <rect x="50" y="30" width="100" height="55" class="ns-box"/>
@@ -527,7 +530,7 @@
         <text x="410" y="73" class="label-sm" text-anchor="middle">.0.200.1</text>
         <line x1="410" y1="85" x2="410" y2="140" class="cable" style="stroke:var(--vlan200);"/>
 
-        <rect x="160" y="225" width="400" height="65" rx="8" fill="#1a0d0d" stroke="var(--danger)" stroke-width="2"/>
+        <rect x="160" y="225" width="400" height="65" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
         <text x="360" y="250" class="label" text-anchor="middle" style="fill:var(--danger);">Firewall VM</text>
         <text x="360" y="272" class="label-sm" text-anchor="middle">Needs one NIC per VLAN &mdash; cannot use a single 802.1Q trunk</text>
         <line x1="200" y1="225" x2="100" y2="185" class="cable" style="stroke:var(--vlan100); stroke-dasharray:4 3;"/>
@@ -583,19 +586,19 @@
         <line x1="395" y1="125" x2="395" y2="170" style="stroke:var(--accent); stroke-width:3;"/>
         <text x="395" y="148" class="label-sm" text-anchor="middle" style="fill:var(--accent);">ACCESS</text>
 
-        <rect x="590" y="42" width="130" height="50" rx="6" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="590" y="42" width="130" height="50" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="655" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (uplink)</text>
         <text x="655" y="80" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">100, 200</text>
         <line x1="655" y1="92" x2="655" y2="170" style="stroke:var(--fg-dim); stroke-width:2;"/>
 
-        <rect x="80" y="255" width="310" height="110" rx="8" fill="var(--bg-card)" stroke="#1e2844" stroke-width="1"/>
+        <rect x="80" y="255" width="310" height="110" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
         <text x="100" y="280" class="label" style="font-size:13px; fill:var(--accent);">Access port ingress:</text>
         <text x="100" y="300" class="label-sm">Untagged frame arrives &rarr;</text>
         <text x="100" y="316" class="label-sm">Bridge adds VLAN 100 tag (PVID)</text>
         <text x="100" y="340" class="label" style="font-size:13px; fill:var(--accent);">Access port egress:</text>
         <text x="100" y="358" class="label-sm">Bridge strips VLAN tag &rarr; guest sees plain ethernet</text>
 
-        <rect x="420" y="255" width="310" height="110" rx="8" fill="var(--bg-card)" stroke="#1e2844" stroke-width="1"/>
+        <rect x="420" y="255" width="310" height="110" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
         <text x="440" y="280" class="label" style="font-size:13px; fill:var(--warn);">Trunk port:</text>
         <text x="440" y="300" class="label-sm">Tagged frames pass through unchanged</text>
         <text x="440" y="316" class="label-sm">Guest must create sub-interfaces:</text>
@@ -614,27 +617,27 @@
     <div class="diagram" style="margin-top:1.5em;">
       <svg viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg">
         <text x="20" y="28" class="label" style="font-size:13px; fill:var(--fg-dim);">Untagged frame:</text>
-        <rect x="20" y="40" width="120" height="40" rx="4" fill="#1a2040" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="20" y="40" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="80" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">Dst MAC</text>
-        <rect x="140" y="40" width="120" height="40" rx="4" fill="#1a2040" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="140" y="40" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="200" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">Src MAC</text>
-        <rect x="260" y="40" width="90" height="40" rx="4" fill="#1a2040" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="260" y="40" width="90" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="305" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">EtherType</text>
-        <rect x="350" y="40" width="320" height="40" rx="4" fill="#0d1828" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="350" y="40" width="320" height="40" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="510" y="65" class="label-sm" text-anchor="middle">Payload ...</text>
 
         <text x="20" y="118" class="label" style="font-size:13px; fill:var(--fg-dim);">Tagged frame:</text>
-        <rect x="20" y="130" width="120" height="40" rx="4" fill="#1a2040" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="20" y="130" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="80" y="155" class="label-sm" text-anchor="middle" style="fill:#fff;">Dst MAC</text>
-        <rect x="140" y="130" width="120" height="40" rx="4" fill="#1a2040" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="140" y="130" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="200" y="155" class="label-sm" text-anchor="middle" style="fill:#fff;">Src MAC</text>
         <rect x="260" y="124" width="130" height="52" rx="4" fill="var(--warn)" opacity="0.15" stroke="var(--warn)" stroke-width="2.5"/>
         <text x="325" y="147" class="label" text-anchor="middle" style="fill:var(--warn); font-size:13px;">0x8100</text>
         <text x="325" y="165" class="label-sm" text-anchor="middle" style="fill:var(--warn);">VLAN ID + PRI</text>
         <text x="325" y="118" class="label-sm" text-anchor="middle" style="fill:var(--warn);">&larr; 4 bytes inserted</text>
-        <rect x="390" y="130" width="90" height="40" rx="4" fill="#1a2040" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="390" y="130" width="90" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="435" y="155" class="label-sm" text-anchor="middle" style="fill:#fff;">EtherType</text>
-        <rect x="480" y="130" width="220" height="40" rx="4" fill="#0d1828" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="480" y="130" width="220" height="40" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="590" y="155" class="label-sm" text-anchor="middle">Payload ...</text>
 
         <text x="20" y="205" class="label-sm" style="fill:var(--accent);"><tspan font-weight="600">Access port (pvid untagged)</tspan>: bridge inserts/removes this tag automatically</text>
@@ -653,7 +656,7 @@
         <h4 style="color:var(--accent);">macvlan</h4>
         <div class="diagram" style="margin:0.5em 0;">
           <svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
-            <rect x="110" y="140" width="130" height="35" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+            <rect x="110" y="140" width="130" height="35" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
             <text x="175" y="162" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (parent)</text>
             <text x="175" y="195" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">MAC: aa:bb:cc:00:00:01</text>
             <rect x="20" y="30" width="130" height="50" class="ns-box" style="stroke:var(--vlan100);"/>
@@ -676,7 +679,7 @@
         <h4 style="color:var(--accent3);">ipvlan</h4>
         <div class="diagram" style="margin:0.5em 0;">
           <svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
-            <rect x="110" y="140" width="130" height="35" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+            <rect x="110" y="140" width="130" height="35" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
             <text x="175" y="162" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (parent)</text>
             <text x="175" y="195" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">MAC: aa:bb:cc:00:00:01</text>
             <rect x="20" y="30" width="130" height="50" class="ns-box" style="stroke:var(--vlan100);"/>
@@ -770,29 +773,29 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="152" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-trunk (vlan_filtering 1)</text>
         <text x="400" y="168" class="label-sm" text-anchor="middle">Per-port VLAN allow-lists &mdash; this is what Bridge CNI does on OCP</text>
 
-        <rect x="60" y="15" width="140" height="75" rx="6" fill="#1a0d10" stroke="var(--danger)" stroke-width="1.5"/>
+        <rect x="60" y="15" width="140" height="75" rx="6" fill="#1f1515" stroke="var(--danger)" stroke-width="1.5"/>
         <text x="130" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:12px;">fw-dmz</text>
         <text x="130" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 100,200</text>
         <line x1="130" y1="90" x2="130" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
 
-        <rect x="230" y="15" width="140" height="75" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <rect x="230" y="15" width="140" height="75" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
         <text x="300" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:12px;">fw-internal</text>
         <text x="300" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 123,150</text>
         <line x1="300" y1="90" x2="300" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
 
-        <rect x="410" y="15" width="140" height="75" rx="6" fill="#10101a" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="410" y="15" width="140" height="75" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="480" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">monitor</text>
         <text x="480" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">all VLANs</text>
         <line x1="480" y1="90" x2="480" y2="130" style="stroke:var(--accent3); stroke-width:2.5;"/>
 
-        <rect x="590" y="15" width="140" height="75" rx="6" fill="#0d1828" stroke="var(--vlan100)" stroke-width="1.5"/>
+        <rect x="590" y="15" width="140" height="75" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
         <text x="660" y="38" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a</text>
         <text x="660" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">access 100</text>
         <line x1="660" y1="90" x2="660" y2="130" style="stroke:var(--accent); stroke-width:2.5;"/>
 
         <text x="220" y="45" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">&#x2715;</text>
 
-        <rect x="330" y="190" width="140" height="26" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="330" y="190" width="140" height="26" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="400" y="208" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (uplink)</text>
         <line x1="400" y1="178" x2="400" y2="190" class="cable"/>
       </svg>
@@ -840,45 +843,45 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <p class="subtitle">Every layer a packet traverses from VM to wire</p>
     <div class="diagram">
       <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
-        <rect x="200" y="10" width="400" height="50" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="2"/>
+        <rect x="200" y="10" width="400" height="50" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
         <text x="400" y="32" class="label" text-anchor="middle" style="fill:var(--danger);">KubeVirt VM (fw-dmz)</text>
         <text x="400" y="50" class="label-sm" text-anchor="middle">eth1.100, eth1.200 &mdash; VLAN sub-interfaces</text>
 
         <line x1="400" y1="60" x2="400" y2="80" style="stroke:var(--fg-dim); stroke-width:2;"/>
         <text x="490" y="74" class="label-sm" style="fill:var(--fg-dim);">virtio NIC</text>
 
-        <rect x="250" y="80" width="300" height="36" rx="6" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="250" y="80" width="300" height="36" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="400" y="103" class="label-sm" text-anchor="middle" style="fill:#fff;">tap device (QEMU process)</text>
 
         <line x1="400" y1="116" x2="400" y2="136" style="stroke:var(--fg-dim); stroke-width:2;"/>
         <text x="490" y="130" class="label-sm" style="fill:var(--fg-dim);">veth pair</text>
 
-        <rect x="150" y="136" width="500" height="40" rx="6" fill="rgba(0,212,170,0.06)" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 3"/>
+        <rect x="150" y="136" width="500" height="40" rx="6" fill="rgba(238,0,0,0.06)" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 3"/>
         <text x="400" y="161" class="label-sm" text-anchor="middle" style="fill:var(--accent);">Pod network namespace boundary</text>
 
         <line x1="400" y1="176" x2="400" y2="196" style="stroke:var(--fg-dim); stroke-width:2;"/>
 
         <rect x="140" y="196" width="520" height="48" rx="8"/>
-        <rect x="140" y="196" width="260" height="48" rx="8" fill="#1a2440" stroke="var(--warn)" stroke-width="2"/>
+        <rect x="140" y="196" width="260" height="48" rx="8" fill="#292929" stroke="var(--warn)" stroke-width="2"/>
         <text x="270" y="216" class="label" text-anchor="middle" style="fill:var(--warn); font-size:13px;">Linux bridge br-secondary</text>
         <text x="270" y="234" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Bridge CNI vlanTrunk</text>
-        <rect x="400" y="196" width="260" height="48" rx="8" fill="#1a1830" stroke="var(--accent2)" stroke-width="2"/>
+        <rect x="400" y="196" width="260" height="48" rx="8" fill="#1f1f1f" stroke="var(--accent2)" stroke-width="2"/>
         <text x="530" y="216" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:13px;">OVS bridge</text>
         <text x="530" y="234" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Localnet CUDN</text>
 
         <line x1="400" y1="244" x2="400" y2="268" style="stroke:var(--fg-dim); stroke-width:2;"/>
 
-        <rect x="200" y="268" width="400" height="36" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <rect x="200" y="268" width="400" height="36" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
         <text x="400" y="291" class="label-sm" text-anchor="middle" style="fill:var(--vlan123);">NMState NodeNetworkConfigurationPolicy</text>
 
         <line x1="400" y1="304" x2="400" y2="328" style="stroke:var(--fg-dim); stroke-width:2;"/>
 
-        <rect x="250" y="328" width="300" height="36" rx="6" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="2"/>
+        <rect x="250" y="328" width="300" height="36" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="2"/>
         <text x="400" y="351" class="label" text-anchor="middle" style="fill:#fff; font-size:14px;">Physical NIC (ens4)</text>
 
         <line x1="400" y1="364" x2="400" y2="388" style="stroke:var(--fg-dim); stroke-width:2;"/>
 
-        <rect x="280" y="388" width="240" height="30" rx="4" fill="#0d0d1a" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="280" y="388" width="240" height="30" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="400" y="408" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Top-of-Rack Switch</text>
 
         <text x="710" y="105" class="label-sm" style="fill:var(--accent);">&larr; tcpdump here</text>
@@ -899,27 +902,27 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram" style="margin-top:0.3em;">
       <svg viewBox="0 0 860 310" xmlns="http://www.w3.org/2000/svg">
         <!-- AWS side -->
-        <rect x="10" y="10" width="400" height="290" rx="12" fill="rgba(108,140,255,0.04)" stroke="var(--accent3)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <rect x="10" y="10" width="400" height="290" rx="12" fill="rgba(0,102,204,0.04)" stroke="var(--accent3)" stroke-width="1.5" stroke-dasharray="6 3"/>
         <text x="210" y="34" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:14px;">AWS VPC &mdash; Familiar Concepts</text>
 
         <!-- VPC box -->
-        <rect x="30" y="50" width="360" height="70" rx="8" fill="#0d1830" stroke="var(--accent3)" stroke-width="2"/>
+        <rect x="30" y="50" width="360" height="70" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
         <text x="210" y="72" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">VPC (10.100.0.0/16)</text>
         <text x="210" y="92" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Isolated virtual network you define. Your own address space.</text>
         <text x="210" y="108" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Security Groups (stateful) enforce traffic rules per-ENI.</text>
 
         <!-- Subnets -->
-        <rect x="40" y="135" width="160" height="45" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <rect x="40" y="135" width="160" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
         <text x="120" y="155" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:11px;">Subnet (10.100.1.0/24)</text>
         <text x="120" y="170" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">AZ-a &bull; instances here</text>
-        <rect x="220" y="135" width="160" height="45" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <rect x="220" y="135" width="160" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
         <text x="300" y="155" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:11px;">Subnet (10.100.2.0/24)</text>
         <text x="300" y="170" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">AZ-b &bull; instances here</text>
         <line x1="120" y1="120" x2="120" y2="135" style="stroke:var(--vlan123); stroke-width:1.5;"/>
         <line x1="300" y1="120" x2="300" y2="135" style="stroke:var(--vlan123); stroke-width:1.5;"/>
 
         <!-- IGW / Direct Connect -->
-        <rect x="120" y="200" width="180" height="36" rx="6" fill="#1a1410" stroke="var(--warn)" stroke-width="1.5"/>
+        <rect x="120" y="200" width="180" height="36" rx="6" fill="#1f1f1f" stroke="var(--warn)" stroke-width="1.5"/>
         <text x="210" y="218" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:11px;">Internet GW / Direct Connect</text>
         <text x="210" y="230" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">Bridge to physical world</text>
         <line x1="210" y1="180" x2="210" y2="200" style="stroke:var(--warn); stroke-width:1.5; stroke-dasharray:4 2;"/>
@@ -929,27 +932,27 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="210" y="272" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Route Table &bull; NACLs &bull; VPC Peering</text>
 
         <!-- OCP side -->
-        <rect x="450" y="10" width="400" height="290" rx="12" fill="rgba(0,212,170,0.04)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <rect x="450" y="10" width="400" height="290" rx="12" fill="rgba(238,0,0,0.04)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="6 3"/>
         <text x="650" y="34" class="label" text-anchor="middle" style="fill:var(--accent); font-size:14px;">OCP UDN &mdash; Equivalent Concepts</text>
 
         <!-- UDN box -->
-        <rect x="470" y="50" width="360" height="70" rx="8" fill="#0d2818" stroke="var(--accent)" stroke-width="2"/>
+        <rect x="470" y="50" width="360" height="70" rx="8" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
         <text x="650" y="72" class="label" text-anchor="middle" style="fill:var(--accent); font-size:13px;">UDN / CUDN (10.100.0.0/16)</text>
         <text x="650" y="92" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Isolated virtual network you define. OVN manages flows.</text>
         <text x="650" y="108" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">NetworkPolicy (stateful) enforces traffic rules per-pod.</text>
 
         <!-- Topology nodes -->
-        <rect x="480" y="135" width="160" height="45" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <rect x="480" y="135" width="160" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
         <text x="560" y="155" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:11px;">Node 1 (10.100.1.0/24)</text>
         <text x="560" y="170" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">pods / VMs here</text>
-        <rect x="660" y="135" width="160" height="45" rx="6" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <rect x="660" y="135" width="160" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
         <text x="740" y="155" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:11px;">Node 2 (10.100.2.0/24)</text>
         <text x="740" y="170" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">pods / VMs here</text>
         <line x1="560" y1="120" x2="560" y2="135" style="stroke:var(--vlan123); stroke-width:1.5;"/>
         <line x1="740" y1="120" x2="740" y2="135" style="stroke:var(--vlan123); stroke-width:1.5;"/>
 
         <!-- Localnet -->
-        <rect x="560" y="200" width="180" height="36" rx="6" fill="#1a1410" stroke="var(--warn)" stroke-width="1.5"/>
+        <rect x="560" y="200" width="180" height="36" rx="6" fill="#1f1f1f" stroke="var(--warn)" stroke-width="1.5"/>
         <text x="650" y="218" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:11px;">Localnet topology</text>
         <text x="650" y="230" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">Bridge to physical world</text>
         <line x1="650" y1="180" x2="650" y2="200" style="stroke:var(--warn); stroke-width:1.5; stroke-dasharray:4 2;"/>
@@ -981,12 +984,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram" style="margin-top:0.4em;">
       <svg viewBox="0 0 860 290" xmlns="http://www.w3.org/2000/svg">
         <!-- UDN side -->
-        <rect x="10" y="10" width="400" height="270" rx="12" fill="rgba(108,140,255,0.04)" stroke="var(--accent3)" stroke-width="1.5"/>
+        <rect x="10" y="10" width="400" height="270" rx="12" fill="rgba(0,102,204,0.04)" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="210" y="34" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:14px;">UserDefinedNetwork (UDN)</text>
         <text x="210" y="52" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Namespace-scoped &bull; Like a VPC in one AWS account</text>
 
         <!-- Single namespace -->
-        <rect x="40" y="68" width="340" height="100" rx="8" fill="#0d1830" stroke="var(--vlan100)" stroke-width="2"/>
+        <rect x="40" y="68" width="340" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
         <text x="210" y="88" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">namespace: tenant-a</text>
         <rect x="60" y="100" width="100" height="40" rx="6" fill="var(--bg-card)" stroke="var(--vlan100)" stroke-width="1.5"/>
         <text x="110" y="118" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:10px;">UDN</text>
@@ -1008,12 +1011,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="210" y="270" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Good for: single-team isolation, one namespace = one network</text>
 
         <!-- CUDN side -->
-        <rect x="450" y="10" width="400" height="270" rx="12" fill="rgba(0,212,170,0.04)" stroke="var(--accent)" stroke-width="1.5"/>
+        <rect x="450" y="10" width="400" height="270" rx="12" fill="rgba(238,0,0,0.04)" stroke="var(--accent)" stroke-width="1.5"/>
         <text x="650" y="34" class="label" text-anchor="middle" style="fill:var(--accent); font-size:14px;">ClusterUserDefinedNetwork (CUDN)</text>
         <text x="650" y="52" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Cluster-scoped &bull; Like a VPC shared via AWS RAM</text>
 
         <!-- Multiple namespaces -->
-        <rect x="470" y="68" width="155" height="100" rx="8" fill="#0d1830" stroke="var(--vlan100)" stroke-width="2"/>
+        <rect x="470" y="68" width="155" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
         <text x="547" y="86" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:10px;">ns: tenant-a</text>
         <circle cx="510" cy="118" r="14" fill="var(--bg-card)" stroke="var(--vlan100)" stroke-width="1.5"/>
         <text x="510" y="122" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">VM</text>
@@ -1021,14 +1024,14 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="550" y="122" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">VM</text>
         <text x="547" y="152" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:8px;">&#x2713; selected</text>
 
-        <rect x="645" y="68" width="155" height="100" rx="8" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2"/>
+        <rect x="645" y="68" width="155" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
         <text x="722" y="86" class="label-sm" text-anchor="middle" style="fill:var(--vlan200); font-size:10px;">ns: firewall-vms</text>
         <circle cx="690" cy="118" r="14" fill="var(--bg-card)" stroke="var(--danger)" stroke-width="1.5"/>
         <text x="690" y="122" class="vlan-tag" text-anchor="middle" style="fill:var(--danger);">FW</text>
         <text x="722" y="152" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:8px;">&#x2713; selected</text>
 
         <!-- CUDN object -->
-        <rect x="510" y="185" width="230" height="40" rx="6" fill="#0d2818" stroke="var(--accent)" stroke-width="2"/>
+        <rect x="510" y="185" width="230" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
         <text x="625" y="204" class="label-sm" text-anchor="middle" style="fill:var(--accent); font-size:11px;">CUDN: cudn-vlan100</text>
         <text x="625" y="218" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">namespaceSelector: tenant-a, firewall-vms</text>
         <line x1="547" y1="168" x2="580" y2="185" style="stroke:var(--accent); stroke-width:1.5; stroke-dasharray:4 2;"/>
@@ -1052,7 +1055,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <p style="font-size:0.8em; color:var(--fg-dim); margin-bottom:0.4em;">AWS analogy: <strong style="color:var(--vlan100);">single subnet in one AZ</strong></p>
         <div class="diagram" style="margin:0.2em 0;">
           <svg viewBox="0 0 220 105" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="55" width="200" height="28" rx="6" fill="#0d1830" stroke="var(--vlan100)" stroke-width="2"/>
+            <rect x="10" y="55" width="200" height="28" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
             <text x="110" y="74" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:11px;">Flat L2 &mdash; 10.100.0.0/16</text>
             <rect x="15" y="5" width="55" height="35" rx="5" fill="var(--bg-card)" stroke="var(--vlan100)" stroke-width="1.5"/>
             <text x="42" y="21" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:9px;">VM</text>
@@ -1079,13 +1082,13 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
             <circle cx="110" cy="14" r="12" fill="var(--bg-card)" stroke="var(--vlan123)" stroke-width="2"/>
             <text x="110" y="18" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:8px;">OVN</text>
             <text x="110" y="36" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">Logical Router</text>
-            <rect x="5" y="48" width="95" height="45" rx="5" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+            <rect x="5" y="48" width="95" height="45" rx="5" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
             <text x="52" y="62" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:9px;">Node 1</text>
             <text x="52" y="76" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">10.200.1.0/24</text>
             <circle cx="30" cy="86" r="6" fill="var(--bg-card)" stroke="var(--vlan123)" stroke-width="1"/>
             <circle cx="52" cy="86" r="6" fill="var(--bg-card)" stroke="var(--vlan123)" stroke-width="1"/>
             <circle cx="74" cy="86" r="6" fill="var(--bg-card)" stroke="var(--vlan123)" stroke-width="1"/>
-            <rect x="120" y="48" width="95" height="45" rx="5" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="1.5"/>
+            <rect x="120" y="48" width="95" height="45" rx="5" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
             <text x="167" y="62" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:9px;">Node 2</text>
             <text x="167" y="76" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">10.200.2.0/24</text>
             <circle cx="145" cy="86" r="6" fill="var(--bg-card)" stroke="var(--vlan123)" stroke-width="1"/>
@@ -1102,16 +1105,16 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <p style="font-size:0.8em; color:var(--fg-dim); margin-bottom:0.4em;">AWS analogy: <strong style="color:var(--warn);">Direct Connect / VPN Gateway</strong></p>
         <div class="diagram" style="margin:0.2em 0;">
           <svg viewBox="0 0 220 105" xmlns="http://www.w3.org/2000/svg">
-            <rect x="35" y="2" width="150" height="24" rx="5" fill="#1a1430" stroke="var(--vlan150)" stroke-width="1.5"/>
+            <rect x="35" y="2" width="150" height="24" rx="5" fill="#1f1a1f" stroke="var(--vlan150)" stroke-width="1.5"/>
             <text x="110" y="18" class="label-sm" text-anchor="middle" style="fill:var(--vlan150); font-size:10px;">OVN Logical Switch</text>
             <line x1="110" y1="26" x2="110" y2="35" style="stroke:var(--warn); stroke-width:2;"/>
-            <rect x="60" y="35" width="100" height="20" rx="4" fill="#1a1410" stroke="var(--warn)" stroke-width="2"/>
+            <rect x="60" y="35" width="100" height="20" rx="4" fill="#1f1f1f" stroke="var(--warn)" stroke-width="2"/>
             <text x="110" y="49" class="vlan-tag" text-anchor="middle" style="fill:var(--warn); font-weight:700;">localnet port</text>
             <line x1="110" y1="55" x2="110" y2="64" style="stroke:var(--accent2); stroke-width:2;"/>
-            <rect x="30" y="64" width="160" height="20" rx="4" fill="#1a1428" stroke="var(--accent2)" stroke-width="1.5"/>
+            <rect x="30" y="64" width="160" height="20" rx="4" fill="#292929" stroke="var(--accent2)" stroke-width="1.5"/>
             <text x="110" y="78" class="label-sm" text-anchor="middle" style="fill:var(--accent2); font-size:9px;">OVS bridge (bridge-mappings)</text>
             <line x1="110" y1="84" x2="110" y2="91" style="stroke:var(--fg-dim); stroke-width:1.5;"/>
-            <rect x="50" y="91" width="120" height="14" rx="4" fill="#0d0d1a" stroke="var(--fg-dim)" stroke-width="1"/>
+            <rect x="50" y="91" width="120" height="14" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
             <text x="110" y="102" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:8px;">Physical NIC &rarr; switch</text>
           </svg>
         </div>
@@ -1153,7 +1156,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <div style="font-size:0.55em;">
           <div class="diagram" style="margin:0.2em 0;">
             <svg viewBox="0 0 300 70" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="3" width="290" height="64" rx="8" fill="#0d2818" stroke="var(--accent)" stroke-width="2"/>
+              <rect x="5" y="3" width="290" height="64" rx="8" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
               <text x="150" y="18" class="label-sm" text-anchor="middle" style="fill:var(--accent); font-size:10px;">OVN-Kubernetes manages everything</text>
               <rect x="15" y="26" width="62" height="18" rx="4" fill="var(--bg-card)" stroke="var(--success)" stroke-width="1.5"/>
               <text x="46" y="39" class="vlan-tag" text-anchor="middle" style="fill:var(--success);">IPAM</text>
@@ -1179,7 +1182,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <div style="font-size:0.55em;">
           <div class="diagram" style="margin:0.2em 0;">
             <svg viewBox="0 0 300 70" xmlns="http://www.w3.org/2000/svg">
-              <rect x="5" y="3" width="290" height="64" rx="8" fill="#1a1410" stroke="var(--warn)" stroke-width="2"/>
+              <rect x="5" y="3" width="290" height="64" rx="8" fill="#1f1f1f" stroke="var(--warn)" stroke-width="2"/>
               <text x="150" y="18" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:10px;">You manage the bridge config</text>
               <rect x="15" y="26" width="100" height="18" rx="4" fill="var(--bg-card)" stroke="var(--warn)" stroke-width="1.5"/>
               <text x="65" y="39" class="vlan-tag" text-anchor="middle" style="fill:var(--warn);">Raw L2 frames</text>
@@ -1212,7 +1215,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="162" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-secondary (Linux bridge, vlan_filtering)</text>
         <text x="400" y="178" class="label-sm" text-anchor="middle">NMState NNCP with trunk-tags on ens4</text>
 
-        <rect x="70" y="15" width="200" height="85" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="2"/>
+        <rect x="70" y="15" width="200" height="85" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
         <text x="170" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="170" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; single trunk NIC</text>
         <rect x="100" y="64" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
@@ -1222,7 +1225,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="170" y="95" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-dmz</text>
         <line x1="170" y1="100" x2="170" y2="140" style="stroke:var(--warn); stroke-width:2.5;"/>
 
-        <rect x="310" y="15" width="200" height="85" rx="8" fill="#0d1a10" stroke="var(--vlan123)" stroke-width="2"/>
+        <rect x="310" y="15" width="200" height="85" rx="8" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2"/>
         <text x="410" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:13px;">fw-internal VM</text>
         <text x="410" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; single trunk NIC</text>
         <rect x="345" y="64" width="50" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
@@ -1232,7 +1235,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="410" y="95" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-internal</text>
         <line x1="410" y1="100" x2="410" y2="140" style="stroke:var(--warn); stroke-width:2.5;"/>
 
-        <rect x="550" y="15" width="190" height="85" rx="8" fill="#10101a" stroke="var(--accent3)" stroke-width="2"/>
+        <rect x="550" y="15" width="190" height="85" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
         <text x="645" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">monitor VM</text>
         <text x="645" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; all VLANs</text>
         <rect x="570" y="64" width="28" height="16" rx="2" fill="var(--vlan100)" opacity="0.4"/>
@@ -1244,11 +1247,11 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <text x="290" y="42" class="label" text-anchor="middle" style="fill:var(--danger); font-size:18px;">&#x2715;</text>
 
-        <rect x="330" y="210" width="140" height="30" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="330" y="210" width="140" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="400" y="230" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (physical NIC)</text>
         <line x1="400" y1="188" x2="400" y2="210" class="cable"/>
 
-        <rect x="80" y="248" width="640" height="20" rx="4" fill="var(--bg-card)" stroke="#1e2844" stroke-width="1"/>
+        <rect x="80" y="248" width="640" height="20" rx="4" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
         <text x="400" y="262" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">
           Bridge CNI <tspan style="fill:var(--warn);">"vlanTrunk": [{"id": 100}, {"id": 200}]</tspan> &rarr;
           <tspan style="fill:var(--accent);">bridge vlan add vid 100 dev &lt;port&gt;</tspan>
@@ -1313,28 +1316,28 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="162" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:15px;">ovs-bridge-trunk (OVS, bridge-mappings)</text>
         <text x="400" y="178" class="label-sm" text-anchor="middle">NMState NNCP with ovn.bridge-mappings</text>
 
-        <rect x="100" y="15" width="180" height="85" rx="8" fill="#0d1828" stroke="var(--vlan100)" stroke-width="2"/>
+        <rect x="100" y="15" width="180" height="85" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
         <text x="190" y="38" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="190" y="56" class="label-sm" text-anchor="middle">eth1: VLAN 100 untagged</text>
         <text x="190" y="78" class="label-code" text-anchor="middle" style="font-size:10px;">cudn-vlan100</text>
         <text x="190" y="95" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
         <line x1="190" y1="100" x2="190" y2="140" style="stroke:var(--vlan100); stroke-width:2.5;"/>
 
-        <rect x="340" y="15" width="180" height="85" rx="8" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2"/>
+        <rect x="340" y="15" width="180" height="85" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
         <text x="430" y="38" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="430" y="56" class="label-sm" text-anchor="middle">eth1: VLAN 200 untagged</text>
         <text x="430" y="78" class="label-code" text-anchor="middle" style="font-size:10px;">cudn-vlan200</text>
         <text x="430" y="95" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
         <line x1="430" y1="100" x2="430" y2="140" style="stroke:var(--vlan200); stroke-width:2.5;"/>
 
-        <rect x="560" y="15" width="180" height="85" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="1.5"/>
+        <rect x="560" y="15" width="180" height="85" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="1.5"/>
         <text x="650" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:12px;">fw-dmz (multi-NIC)</text>
         <text x="650" y="56" class="label-sm" text-anchor="middle">eth1: 100, eth2: 200</text>
         <text x="650" y="78" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100 + cudn-vlan200</text>
         <text x="650" y="95" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">No 802.1Q trunk &mdash; discrete NICs</text>
         <line x1="650" y1="100" x2="650" y2="140" style="stroke:var(--accent2); stroke-width:2.5;"/>
 
-        <rect x="330" y="210" width="140" height="30" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="330" y="210" width="140" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="400" y="230" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (physical NIC)</text>
         <line x1="400" y1="188" x2="400" y2="210" class="cable"/>
       </svg>
@@ -1434,7 +1437,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- The punchline -->
-  <section data-background="linear-gradient(135deg, #080c18, #0a1428, #0f1a30)">
+  <section data-background="linear-gradient(135deg, #151515, #1f1f1f, #151515)">
     <h2 style="text-align:center;">The Punchline</h2>
     <div style="margin-top:0.6em; text-align:center;">
       <div class="punchline" style="border-left-color:var(--accent); text-align:center; max-width:700px; margin:0 auto; font-size:0.85em;">
@@ -1477,20 +1480,20 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <rect x="20" y="8" width="760" height="295" rx="12" fill="none" stroke="var(--fg-dim)" stroke-width="1" stroke-dasharray="6 3"/>
         <text x="400" y="28" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
-        <rect x="40" y="40" width="210" height="120" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="2"/>
+        <rect x="40" y="40" width="210" height="120" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
         <text x="145" y="62" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="145" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 100 (untagged)</text>
         <text x="145" y="95" class="label-sm" text-anchor="middle">eth2: VLAN 200 (untagged)</text>
         <text x="145" y="118" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100 + cudn-vlan200</text>
         <text x="145" y="150" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
 
-        <rect x="290" y="40" width="200" height="120" rx="8" fill="#0d1828" stroke="var(--vlan100)" stroke-width="2"/>
+        <rect x="290" y="40" width="200" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
         <text x="390" y="62" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="390" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 100 (untagged)</text>
         <text x="390" y="100" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100</text>
         <text x="390" y="150" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
 
-        <rect x="530" y="40" width="200" height="120" rx="8" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2"/>
+        <rect x="530" y="40" width="200" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
         <text x="630" y="62" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="630" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 200 (untagged)</text>
         <text x="630" y="100" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan200</text>
@@ -1505,7 +1508,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="230" class="label-sm" text-anchor="middle">All VMs attach via Localnet CUDNs</text>
 
         <line x1="400" y1="239" x2="400" y2="260" class="cable"/>
-        <rect x="330" y="260" width="140" height="28" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="330" y="260" width="140" height="28" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="400" y="279" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (single NIC)</text>
       </svg>
     </div>
@@ -1522,20 +1525,20 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <rect x="10" y="5" width="780" height="340" rx="12" fill="none" stroke="var(--fg-dim)" stroke-width="1" stroke-dasharray="6 3"/>
         <text x="400" y="25" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
-        <rect x="30" y="35" width="200" height="110" rx="8" fill="#1a0d10" stroke="var(--danger)" stroke-width="2"/>
+        <rect x="30" y="35" width="200" height="110" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
         <text x="130" y="58" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="130" y="76" class="label-sm" text-anchor="middle">eth1: trunk 100,200</text>
         <text x="130" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">Bridge CNI vlanTrunk NAD</text>
         <text x="130" y="118" class="label-sm" text-anchor="middle" style="fill:var(--danger); font-size:8px;">NetworkPolicy: &#x2715;</text>
         <text x="130" y="132" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:8px;">Policy: the appliance itself</text>
 
-        <rect x="370" y="35" width="180" height="110" rx="8" fill="#0d1828" stroke="var(--vlan100)" stroke-width="2"/>
+        <rect x="370" y="35" width="180" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
         <text x="460" y="58" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="460" y="76" class="label-sm" text-anchor="middle">eth1: VLAN 100 untag</text>
         <text x="460" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100</text>
         <text x="460" y="118" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:8px;">NetworkPolicy: &#x2713;</text>
 
-        <rect x="580" y="35" width="180" height="110" rx="8" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2"/>
+        <rect x="580" y="35" width="180" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
         <text x="670" y="58" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="670" y="76" class="label-sm" text-anchor="middle">eth1: VLAN 200 untag</text>
         <text x="670" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan200</text>
@@ -1552,17 +1555,17 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="565" y="198" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">ovs-bridge-trunk (OVS)</text>
 
         <line x1="130" y1="211" x2="130" y2="240" class="cable"/>
-        <rect x="70" y="240" width="120" height="24" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="70" y="240" width="120" height="24" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="130" y="257" class="label-sm" text-anchor="middle" style="fill:#fff; font-size:10px;">NIC-A (enp1s0)</text>
 
         <line x1="565" y1="211" x2="565" y2="240" class="cable"/>
-        <rect x="505" y="240" width="120" height="24" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="505" y="240" width="120" height="24" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="565" y="257" class="label-sm" text-anchor="middle" style="fill:#fff; font-size:10px;">NIC-B (enp2s0)</text>
 
         <line x1="130" y1="264" x2="130" y2="295" class="cable"/>
         <line x1="565" y1="264" x2="565" y2="295" class="cable"/>
 
-        <rect x="50" y="295" width="700" height="36" rx="8" fill="#0d0d1a" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="50" y="295" width="700" height="36" rx="8" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="400" y="318" class="label" text-anchor="middle" style="fill:var(--fg-dim); font-size:13px;">Physical Switch (trunk ports, same VLANs)</text>
       </svg>
     </div>
@@ -1571,7 +1574,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- Model 4: Internal/External Boundary -->
-  <section data-background="linear-gradient(135deg, #080c18 0%, #0c1525 50%, #0a1020 100%)">
+  <section data-background="linear-gradient(135deg, #151515 0%, #1f1f1f 50%, #151515 100%)">
     <h2 style="text-align:center;">Model 4: Internal / External Boundary</h2>
     <h3 style="text-align:center; margin-top:-0.2em; font-size:0.7em; color:var(--accent);">Hybrid: Localnet CUDN + Bridge CNI Trunk</h3>
     <p class="subtitle" style="text-align:center; margin-bottom:0.1em;">Primary Localnet CUDN (internal) + Bridge CNI <code>vlanTrunk</code> (external) &mdash; best with few internal VLANs</p>
@@ -1587,12 +1590,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="550" y="44" class="vlan-tag" text-anchor="middle" style="fill:var(--success); font-size:9px; font-weight:700;">INTERNAL DOMAIN (OVN-managed, NetworkPolicy enforced)</text>
 
         <!-- ========== FIREWALL VM ========== -->
-        <rect x="25" y="50" width="400" height="160" rx="10" fill="#1a0d10" stroke="var(--danger)" stroke-width="2.5"/>
+        <rect x="25" y="50" width="400" height="160" rx="10" fill="#1f1515" stroke="var(--danger)" stroke-width="2.5"/>
         <text x="225" y="70" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">fw-dmz VM (firewall)</text>
         <text x="225" y="85" class="label-sm" text-anchor="middle" style="fill:var(--accent); font-size:9px;">routes internal ↔ external</text>
 
         <!-- eth2: external trunk (LEFT side of firewall) -->
-        <rect x="38" y="96" width="150" height="40" rx="6" fill="#1a1410" stroke="var(--warn)" stroke-width="2"/>
+        <rect x="38" y="96" width="150" height="40" rx="6" fill="#1f1f1f" stroke="var(--warn)" stroke-width="2"/>
         <text x="113" y="112" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:10px;">eth2: 802.1Q trunk</text>
         <text x="113" y="128" class="vlan-tag" text-anchor="middle" style="fill:var(--warn);">VLANs 300, 400, 500</text>
 
@@ -1601,12 +1604,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="275" y="103" class="vlan-tag" text-anchor="middle" style="fill:var(--success); font-weight:700; font-size:7px;">PRIMARY UDN</text>
 
         <!-- eth0: internal VLAN 100 (RIGHT side of firewall) -->
-        <rect x="230" y="110" width="85" height="36" rx="5" fill="#0d1830" stroke="var(--vlan100)" stroke-width="2.5"/>
+        <rect x="230" y="110" width="85" height="36" rx="5" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2.5"/>
         <text x="272" y="126" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:10px; font-weight:600;">eth0</text>
         <text x="272" y="140" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">VLAN 100</text>
 
         <!-- eth1: internal VLAN 200 (RIGHT side of firewall) -->
-        <rect x="328" y="110" width="85" height="36" rx="5" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2.5"/>
+        <rect x="328" y="110" width="85" height="36" rx="5" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2.5"/>
         <text x="370" y="126" class="label-sm" text-anchor="middle" style="fill:var(--vlan200); font-size:10px; font-weight:600;">eth1</text>
         <text x="370" y="140" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">VLAN 200</text>
 
@@ -1631,14 +1634,14 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         </defs>
 
         <!-- ========== TENANT VMs ========== -->
-        <rect x="480" y="50" width="170" height="100" rx="8" fill="#0d1828" stroke="var(--vlan100)" stroke-width="2"/>
+        <rect x="480" y="50" width="170" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
         <text x="565" y="70" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a VM</text>
         <text x="565" y="86" class="label-sm" text-anchor="middle" style="font-size:9px;">eth1: VLAN 100 untag</text>
         <text x="565" y="100" class="label-code" text-anchor="middle" style="font-size:8px;">cudn-internal-100</text>
         <text x="565" y="116" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:8px;">NetworkPolicy: ✓</text>
         <text x="565" y="142" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:7px;">No external access</text>
 
-        <rect x="690" y="50" width="170" height="100" rx="8" fill="#0d1018" stroke="var(--vlan200)" stroke-width="2"/>
+        <rect x="690" y="50" width="170" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
         <text x="775" y="70" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:12px;">tenant-b VM</text>
         <text x="775" y="86" class="label-sm" text-anchor="middle" style="font-size:9px;">eth1: VLAN 200 untag</text>
         <text x="775" y="100" class="label-code" text-anchor="middle" style="font-size:8px;">cudn-internal-200</text>
@@ -1675,17 +1678,17 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <!-- ========== NICs ========== -->
         <line x1="112" y1="264" x2="112" y2="290" class="cable"/>
-        <rect x="62" y="290" width="100" height="20" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="62" y="290" width="100" height="20" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="112" y="304" class="label-sm" text-anchor="middle" style="fill:#fff; font-size:9px;">Bond B (external)</text>
 
         <line x1="545" y1="264" x2="545" y2="290" class="cable"/>
-        <rect x="485" y="290" width="120" height="20" rx="4" fill="#1a1428" stroke="var(--fg-dim)" stroke-width="1"/>
+        <rect x="485" y="290" width="120" height="20" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
         <text x="545" y="304" class="label-sm" text-anchor="middle" style="fill:#fff; font-size:9px;">Bond A (internal)</text>
 
         <!-- ========== PHYSICAL SWITCH ========== -->
         <line x1="112" y1="310" x2="112" y2="330" class="cable"/>
         <line x1="545" y1="310" x2="545" y2="330" class="cable"/>
-        <rect x="25" y="330" width="835" height="24" rx="8" fill="#0d0d1a" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <rect x="25" y="330" width="835" height="24" rx="8" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="440" y="346" class="label" text-anchor="middle" style="fill:var(--fg-dim); font-size:11px;">Physical Switch (both bonds trunked with their respective VLANs)</text>
       </svg>
     </div>
@@ -1801,7 +1804,7 @@ spec:
   <!-- Hands-on -->
   <section>
     <div style="text-align:center; padding-top:3em;">
-      <h2>Hands-On Time</h2>
+      <h2>Hands-on time</h2>
       <p style="color:var(--fg-dim); font-size:0.8em; margin-top:1em;">
         Open the lab guide and start with Phase 1:
       </p>
@@ -1824,6 +1827,9 @@ spec:
       </div>
       <p style="color:var(--fg-dim); font-size:0.55em; margin-top:3em;">
         &larr; &rarr; navigate phases &nbsp;&nbsp;|&nbsp;&nbsp; &uarr; &darr; sub-sections &nbsp;&nbsp;|&nbsp;&nbsp; Esc overview &nbsp;&nbsp;|&nbsp;&nbsp; S speaker notes &nbsp;&nbsp;|&nbsp;&nbsp; F fullscreen
+      </p>
+      <p style="color:#707070; font-size:0.4em; margin-top:2em;">
+        &copy; Red Hat. Brand standards: <a href="https://www.redhat.com/en/about/brand/standards" style="color:var(--accent3);">redhat.com/brand</a>
       </p>
     </div>
   </section>

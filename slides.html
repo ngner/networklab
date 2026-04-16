@@ -790,8 +790,8 @@
 <!-- ============================================================ -->
 <!-- PHASE 2: OVS & OVN BACKGROUND -->
 <!-- ============================================================ -->
-<section data-background="#ffffff">
-  <section data-background="#ffffff" class="light-section">
+<section data-background-color="#ffffff">
+  <section data-background-color="#ffffff" class="light-section">
     <div class="phase-title">
       <svg width="50" height="38" viewBox="0 0 192.3 146" style="display:block; margin:0 auto 0.4em;"><use href="#rhi-hat"/></svg>
       <span class="phase-badge p2">Phase 2</span>
@@ -800,7 +800,7 @@
     </div>
   </section>
 
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p2">Phase 2</span>
     <h2>OVS Is the OVN-Kubernetes Datapath</h2>
     <div style="font-size:0.72em; margin-top:0.4em;">
@@ -917,8 +917,8 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 <!-- ============================================================ -->
 <!-- PHASE 5: OPENSHIFT + KUBEVIRT -->
 <!-- ============================================================ -->
-<section data-background="#ffffff">
-  <section data-background="#ffffff" class="light-section">
+<section data-background-color="#ffffff">
+  <section data-background-color="#ffffff" class="light-section">
     <div class="phase-title">
       <svg width="50" height="38" viewBox="0 0 192.3 146" style="display:block; margin:0 auto 0.4em;"><use href="#rhi-hat"/></svg>
       <span class="phase-badge p5">Phase 5</span>
@@ -928,7 +928,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- KubeVirt networking stack -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5</span>
     <h2>KubeVirt VM Networking Stack</h2>
     <p class="subtitle">Every layer a packet traverses from VM to wire</p>
@@ -989,7 +989,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- What is a UDN? — AWS VPC analogy -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e</span>
     <h2>What Is a User Defined Network?</h2>
     <p class="subtitle">Think of it as an <strong style="color:var(--accent);">AWS VPC</strong> &mdash; but inside your OpenShift cluster</p>
@@ -1071,7 +1071,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- UDN vs CUDN: Scope -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e</span>
     <h2>UDN vs CUDN: Scope</h2>
     <p class="subtitle">Namespace-scoped vs cluster-wide &mdash; like a single-account VPC vs a shared VPC</p>
@@ -1140,7 +1140,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- UDN topologies with AWS analogies -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e</span>
     <h2>UDN Topologies &mdash; Three Ways to Wire a Network</h2>
     <div class="compare-grid three" style="margin-top:0.3em; font-size:0.62em;">
@@ -1220,7 +1220,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- AWS → OCP concept mapping table -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e</span>
     <h2>AWS VPC &rarr; OCP UDN Cheat Sheet</h2>
     <p class="subtitle" style="margin-bottom:0.2em;">If you know AWS networking, you already understand the UDN model</p>
@@ -1240,7 +1240,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- Managed vs Unmanaged: UDN vs Bridge CNI -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5</span>
     <h2>Managed Virtual Network vs Raw L2 Pipe</h2>
     <p class="subtitle" style="margin-bottom:0.2em;">UDN gives you a VPC. Bridge CNI gives you a cable.</p>
@@ -1299,7 +1299,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- 5e-1: Bridge CNI vlanTrunk -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e-1</span>
     <h2>Bridge CNI <code>vlanTrunk</code>: Per-VM VLAN Trunks</h2>
     <p class="subtitle">Linux bridge + per-port VLAN allow-lists &mdash; the Phase 3 model on Kubernetes</p>
@@ -1360,7 +1360,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- Bridge CNI NAD detail -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e-1</span>
     <h2>Bridge CNI <code>vlanTrunk</code> NADs</h2>
     <p class="subtitle">One NAD per firewall role &mdash; different VLAN allow-lists</p>
@@ -1404,7 +1404,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- 5e-2: Localnet CUDN -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5e-2</span>
     <h2>Localnet CUDN: Per-VLAN Access Networks</h2>
     <p class="subtitle">One CUDN per VLAN &mdash; VM gets one untagged NIC per CUDN</p>
@@ -1446,7 +1446,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
   </section>
 
   <!-- Two-approach comparison -->
-  <section data-background="#ffffff" class="light-section">
+  <section data-background-color="#ffffff" class="light-section">
     <span class="phase-badge p5">Phase 5</span>
     <h2>OCP 4.21: Two Approaches to Firewall VM VLANs</h2>
     <div class="compare-grid" style="margin-top:0.5em; font-size:0.62em;">
@@ -1970,6 +1970,20 @@ Reveal.initialize({
   plugins: [RevealHighlight],
   highlight: {
     highlightOnLoad: true
+  }
+});
+Reveal.on('slidechanged', function(event) {
+  var vp = document.querySelector('.reveal-viewport');
+  if (event.currentSlide && event.currentSlide.classList.contains('light-section')) {
+    vp.style.background = '#ffffff';
+  } else {
+    vp.style.background = '';
+  }
+});
+Reveal.on('ready', function(event) {
+  var vp = document.querySelector('.reveal-viewport');
+  if (event.currentSlide && event.currentSlide.classList.contains('light-section')) {
+    vp.style.background = '#ffffff';
   }
 });
 </script>

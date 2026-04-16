@@ -359,6 +359,41 @@
 </style>
 </head>
 <body>
+
+<svg xmlns="http://www.w3.org/2000/svg" style="display:none;">
+  <symbol id="rhi-firewall" viewBox="0 0 36 36">
+    <path d="m31.13 17.39-5.5-1.17a.57.57 0 0 0-.26 0l-5.5 1.17a.62.62 0 0 0-.49.61v6.5c.28 8.1 12 8.11 12.25 0V18a.62.62 0 0 0-.5-.61Zm-.75 7.11c-.21 6.44-9.55 6.44-9.76 0v-6l4.88-1 4.88 1Z"/>
+    <path d="M24.17 23.15a.63.63 0 0 0-.88.89l1.06 1.06a.63.63 0 0 0 .88 0l2.48-2.48a.63.63 0 0 0-.88-.89l-2 2Z"/>
+    <path d="M31 5.38H5a.61.61 0 0 0-.62.62v24a.62.62 0 0 0 .62.62h14a.62.62 0 0 0 0-1.24h-6.38v-4.76H17a.62.62 0 0 0 0-1.24H5.62v-4.76H17a.62.62 0 0 0 0-1.24h-4.38v-4.76h17.76V15a.62.62 0 0 0 1.24 0V6a.61.61 0 0 0-.62-.62Zm-25.38 6V6.62h13.76v4.76Zm5.76 13.24v4.76H5.62v-4.76Zm0-7.24H5.62v-4.76h5.76Zm9.24-6V6.62h9.76v4.76Z"/>
+  </symbol>
+  <symbol id="rhi-pod" viewBox="0 0 36 36">
+    <path d="m24.31 14-6-3.47a.62.62 0 0 0-.62 0l-6 3.47a.6.6 0 0 0-.31.54v6.92a.6.6 0 0 0 .31.54l6 3.47a.64.64 0 0 0 .62 0l6-3.47a.6.6 0 0 0 .31-.54v-6.92a.6.6 0 0 0-.31-.54Zm-.93 7.1L18 24.21l-5.38-3.11v-6.2L18 11.79l5.38 3.11Z"/>
+    <path d="M18 3.38A14.62 14.62 0 1 0 32.62 18 14.64 14.64 0 0 0 18 3.38Zm0 28A13.38 13.38 0 1 1 31.38 18 13.39 13.39 0 0 1 18 31.38Z"/>
+  </symbol>
+  <symbol id="rhi-vm" viewBox="0 0 36 36">
+    <path d="M31 12.38H5a.63.63 0 0 0-.63.62v10a.63.63 0 0 0 .63.62h26a.62.62 0 0 0 .62-.62V13a.62.62 0 0 0-.62-.62Zm-.63 10H5.62v-8.76h24.75Z"/>
+    <path d="M9 18.62h6a.62.62 0 0 0 0-1.24H9a.62.62 0 1 0 0 1.24Zm15.2 6.27a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm-15.5 0a.63.63 0 1 0 .62.62.63.63 0 0 0-.62-.62Zm9.3 0a.63.63 0 0 0 0 1.25.63.63 0 0 0 0-1.25Zm9.3 0a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm-6.2 0a.63.63 0 1 0 .63.62.63.63 0 0 0-.63-.62Zm-15.5 0a.63.63 0 1 0 .62.62.63.63 0 0 0-.62-.62Zm24.8 0a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm-18.6 0a.63.63 0 1 0 .62.62.63.63 0 0 0-.62-.62Zm3.1 0a.63.63 0 1 0 .62.62.63.63 0 0 0-.62-.62ZM2.5 12.87a.63.63 0 1 0 .62.62.63.63 0 0 0-.62-.62Zm0 9.01a.63.63 0 1 0 .62.63.63.63 0 0 0-.62-.63Zm0-6.01a.63.63 0 1 0 .62.63.63.63 0 0 0-.62-.63Zm0 3.01a.63.63 0 1 0 .62.62.63.63 0 0 0-.62-.62Zm6.2-7.77a.63.63 0 1 0-.63-.62.62.62 0 0 0 .63.62Zm3.1 0a.63.63 0 1 0-.63-.62.62.62 0 0 0 .63.62Zm3.1 0a.63.63 0 1 0-.63-.62.62.62 0 0 0 .63.62Zm9.3 0a.63.63 0 1 0-.62-.62.63.63 0 0 0 .62.62Zm-3.1 0a.63.63 0 1 0-.62-.62.63.63 0 0 0 .62.62Zm-3.1 0a.63.63 0 1 0-.63-.62.63.63 0 0 0 .63.62Zm9.3 0a.63.63 0 1 0-.62-.62.63.63 0 0 0 .62.62Zm3.1 0a.63.63 0 1 0-.62-.62.63.63 0 0 0 .62.62Zm-24.8 0a.63.63 0 1 0-.6-.62.62.62 0 0 0 .6.62Zm27.9 7.77a.62.62 0 0 0-.62.62.63.63 0 1 0 1.25 0 .62.62 0 0 0-.63-.62Zm0 3a.63.63 0 1 0 .63.63.63.63 0 0 0-.63-.63Zm0-9.01a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm0 3a.63.63 0 1 0 .63.63.63.63 0 0 0-.63-.63Zm0-6.01a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm-31.01 0a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm0 15.03a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Zm31.01 0a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62ZM27 17.37a.63.63 0 1 0 .63.62.62.62 0 0 0-.63-.62Z"/>
+  </symbol>
+  <symbol id="rhi-bridge" viewBox="0 0 36 36">
+    <path d="M32 19.375h-6.375v-8.858A7.62 7.62 0 0 0 32 13.971a.625.625 0 0 0 0-1.25 6.382 6.382 0 0 1-6.375-6.375V5a.625.625 0 0 0-1.25 0v1.346c0 3.515-2.86 6.375-6.375 6.375s-6.375-2.86-6.375-6.375V5a.625.625 0 0 0-1.25 0v1.346A6.382 6.382 0 0 1 4 12.72a.625.625 0 0 0 0 1.25 7.62 7.62 0 0 0 6.375-3.454v8.858H4a.625.625 0 0 0 0 1.25h6.375v6.833a2.625 2.625 0 0 0-2 2.542v1c0 .345.28.625.625.625h4c.345 0 .625-.28.625-.625v-1c0-1.23-.855-2.26-2-2.542v-6.833h12.75v6.833a2.625 2.625 0 0 0-2 2.542v1c0 .345.28.625.625.625h4c.345 0 .625-.28.625-.625v-1c0-1.23-.855-2.26-2-2.542v-6.833H32a.625.625 0 0 0 0-1.25ZM12.375 30v.375h-2.75V30c0-.758.617-1.375 1.375-1.375s1.375.617 1.375 1.375Zm14 0v.375h-2.75V30c0-.758.617-1.375 1.375-1.375s1.375.617 1.375 1.375Zm-14.75-10.625v-8.858c1.364 2.077 3.71 3.454 6.375 3.454s5.011-1.377 6.375-3.454v8.858h-12.75Z"/>
+  </symbol>
+  <symbol id="rhi-server" viewBox="0 0 36 36">
+    <path d="M27 18.62a.62.62 0 1 0-.62-.62.61.61 0 0 0 .62.62Z"/>
+    <path d="M31 12.38H5a.61.61 0 0 0-.62.62v10a.61.61 0 0 0 .62.62h26a.61.61 0 0 0 .62-.62V13a.61.61 0 0 0-.62-.62Zm-.62 10H5.62v-8.76h24.76Z"/>
+    <path d="M9 18.62h6a.62.62 0 0 0 0-1.24H9a.62.62 0 0 0 0 1.24Z"/>
+  </symbol>
+  <symbol id="rhi-container" viewBox="0 0 36 36">
+    <path d="m30.44 10.46-12.13-7a.62.62 0 0 0-.62 0l-12.13 7a.63.63 0 0 0-.31.54v14a.63.63 0 0 0 .31.54l12.13 7a.64.64 0 0 0 .62 0l12.13-7a.63.63 0 0 0 .31-.54V11a.63.63 0 0 0-.31-.54Zm-.94 14.18L18 31.28 6.5 24.64V11.36L18 4.72l11.5 6.64Z"/>
+  </symbol>
+  <symbol id="rhi-cluster" viewBox="0 0 36 36">
+    <path d="M26.46 18.62a2.62 2.62 0 1 0 0-1.24h-4.9a3.56 3.56 0 0 0-.6-1.46l6.69-6.68a2.56 2.56 0 0 0 1.35.38A2.62 2.62 0 1 0 26.38 7a2.56 2.56 0 0 0 .38 1.35L20.08 15a3.56 3.56 0 0 0-1.46-.6V9.54a2.62 2.62 0 1 0-1.24 0v4.9a3.56 3.56 0 0 0-1.46.6L9.24 8.35A2.56 2.56 0 0 0 9.62 7 2.62 2.62 0 1 0 7 9.62a2.56 2.56 0 0 0 1.35-.38L15 15.92a3.56 3.56 0 0 0-.6 1.46H9.54a2.62 2.62 0 1 0 0 1.24h4.9a3.56 3.56 0 0 0 .6 1.46l-6.69 6.68A2.56 2.56 0 0 0 7 26.38 2.62 2.62 0 1 0 9.62 29a2.56 2.56 0 0 0-.38-1.35L15.92 21a3.56 3.56 0 0 0 1.46.6v4.9a2.62 2.62 0 1 0 1.24 0v-4.9a3.56 3.56 0 0 0 1.46-.6l6.68 6.69a2.56 2.56 0 0 0-.38 1.31A2.62 2.62 0 1 0 29 26.38a2.56 2.56 0 0 0-1.35.38L21 20.08a3.56 3.56 0 0 0 .6-1.46Zm2.54-2A1.38 1.38 0 1 1 27.62 18 1.38 1.38 0 0 1 29 16.62Zm0-11A1.38 1.38 0 1 1 27.62 7 1.38 1.38 0 0 1 29 5.62ZM5.62 7A1.38 1.38 0 1 1 7 8.38 1.38 1.38 0 0 1 5.62 7ZM7 19.38A1.38 1.38 0 1 1 8.38 18 1.38 1.38 0 0 1 7 19.38Zm0 11A1.38 1.38 0 1 1 8.38 29 1.38 1.38 0 0 1 7 30.38ZM30.38 29A1.38 1.38 0 1 1 29 27.62 1.38 1.38 0 0 1 30.38 29ZM16.62 7A1.38 1.38 0 1 1 18 8.38 1.38 1.38 0 0 1 16.62 7Zm2.76 22A1.38 1.38 0 1 1 18 27.62 1.38 1.38 0 0 1 19.38 29ZM18 20.38A2.38 2.38 0 1 1 20.38 18 2.39 2.39 0 0 1 18 20.38Z"/>
+  </symbol>
+  <symbol id="rhi-network" viewBox="0 0 36 36">
+    <path d="M20.685 27.292a.625.625 0 0 0-.625.625v3.295a12.817 12.817 0 0 1-3.937.021v-3.27a.625.625 0 0 0-.474-.606 9.571 9.571 0 0 1-2.475-1 .625.625 0 0 0-.755.1l-2.33 2.328a13.352 13.352 0 0 1-2.793-2.774l2.317-2.317a.625.625 0 0 0 .095-.762 9.581 9.581 0 0 1-1.043-2.495.625.625 0 0 0-.605-.468H4.777c-.102-.673-.152-1.322-.152-1.969s.05-1.296.152-1.969H8.06a.625.625 0 0 0 .605-.468 9.58 9.58 0 0 1 1.043-2.496.626.626 0 0 0-.095-.762L7.296 9.989a13.352 13.352 0 0 1 2.794-2.774l2.33 2.329c.2.2.51.241.754.099a9.571 9.571 0 0 1 2.475-1 .625.625 0 0 0 .474-.607v-3.27c1.374-.2 2.622-.183 3.937.022v3.295a.625.625 0 0 0 1.25 0v-3.82a.625.625 0 0 0-.506-.613c-1.8-.35-3.499-.377-5.417-.03a.625.625 0 0 0-.514.615V7.56a10.83 10.83 0 0 0-1.901.768l-2.37-2.37a.626.626 0 0 0-.793-.075A14.628 14.628 0 0 0 5.964 9.7a.626.626 0 0 0 .073.798l2.356 2.356c-.33.614-.6 1.26-.806 1.927H4.25a.625.625 0 0 0-.615.51c-.173.922-.26 1.833-.26 2.709s.087 1.787.26 2.709c.055.296.314.51.615.51h3.338c.206.668.475 1.313.805 1.927l-2.356 2.356a.626.626 0 0 0-.073.798 14.628 14.628 0 0 0 3.845 3.817c.248.168.58.136.793-.075l2.37-2.37a10.83 10.83 0 0 0 1.9.768v3.325c0 .302.217.561.515.615a14.61 14.61 0 0 0 2.613.245 14.8 14.8 0 0 0 2.804-.275.625.625 0 0 0 .506-.614v-3.819a.625.625 0 0 0-.625-.625Z"/>
+    <path d="M22.562 18.625h3.876a3.13 3.13 0 0 0 3.062 2.5c1.723 0 3.125-1.402 3.125-3.125s-1.402-3.125-3.125-3.125a3.13 3.13 0 0 0-3.062 2.5h-3.876a4.575 4.575 0 0 0-.894-2.16l3.112-3.11c.494.327 1.084.52 1.72.52 1.723 0 3.125-1.402 3.125-3.125S28.223 6.375 26.5 6.375 23.375 7.777 23.375 9.5c0 .636.193 1.226.52 1.72l-3.11 3.111A4.58 4.58 0 0 0 18 13.375c-2.55 0-4.625 2.075-4.625 4.625S15.45 22.625 18 22.625a4.58 4.58 0 0 0 2.784-.956l3.112 3.11a3.103 3.103 0 0 0-.521 1.721c0 1.723 1.402 3.125 3.125 3.125s3.125-1.402 3.125-3.125-1.402-3.125-3.125-3.125c-.636 0-1.226.193-1.72.52l-3.111-3.11c.47-.62.782-1.354.893-2.16Zm6.938-2.5c1.034 0 1.875.84 1.875 1.875s-.841 1.875-1.875 1.875-1.875-.84-1.875-1.875.841-1.875 1.875-1.875Zm-3-8.5c1.034 0 1.875.84 1.875 1.875s-.841 1.875-1.875 1.875a1.87 1.87 0 0 1-1.323-.548s0-.002-.002-.003c0 0-.002 0-.003-.002a1.869 1.869 0 0 1-.547-1.322c0-1.034.841-1.875 1.875-1.875ZM14.625 18c0-1.861 1.514-3.375 3.375-3.375s3.375 1.514 3.375 3.375-1.514 3.375-3.375 3.375-3.375-1.514-3.375-3.375Zm13.75 8.5a1.877 1.877 0 0 1-1.875 1.875 1.876 1.876 0 0 1-1.328-3.197l.003-.002.002-.003a1.87 1.87 0 0 1 1.323-.548c1.034 0 1.875.84 1.875 1.875Z"/>
+  </symbol>
+</svg>
+
 <div class="reveal">
 <div class="slides">
 
@@ -429,6 +464,7 @@
       <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
         <rect x="40" y="40" width="240" height="220" class="ns-box"/>
         <text x="160" y="30" class="label" text-anchor="middle" style="fill:var(--accent); font-size:13px;">Network Namespace</text>
+        <use href="#rhi-container" x="119" y="52" width="18" height="18" style="fill:var(--accent); opacity:0.7;"/>
         <text x="160" y="72" class="label" text-anchor="middle">guest-a</text>
         <text x="160" y="100" class="label-sm" text-anchor="middle">Own interfaces, routes,</text>
         <text x="160" y="116" class="label-sm" text-anchor="middle">iptables, ARP cache</text>
@@ -441,6 +477,7 @@
 
         <rect x="520" y="40" width="240" height="220" class="ns-box-alt"/>
         <text x="640" y="30" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">Network Namespace</text>
+        <use href="#rhi-container" x="599" y="52" width="18" height="18" style="fill:var(--accent3); opacity:0.7;"/>
         <text x="640" y="72" class="label" text-anchor="middle">guest-b</text>
         <text x="640" y="100" class="label-sm" text-anchor="middle">Completely isolated from</text>
         <text x="640" y="116" class="label-sm" text-anchor="middle">host and other namespaces</text>
@@ -469,12 +506,14 @@
       <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
         <rect x="40" y="20" width="200" height="140" class="ns-box"/>
         <text x="140" y="10" class="label" text-anchor="middle" style="fill:var(--accent); font-size:12px;">Pod namespace</text>
+        <use href="#rhi-pod" x="101" y="32" width="18" height="18" style="fill:var(--accent); opacity:0.7;"/>
         <text x="140" y="52" class="label" text-anchor="middle">Pod A</text>
         <rect x="75" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="1.5"/>
         <text x="140" y="93" class="label-code" text-anchor="middle" style="font-size:11px;">eth0 (veth end)</text>
 
         <rect x="300" y="20" width="200" height="140" class="ns-box-alt"/>
         <text x="400" y="10" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">Pod namespace</text>
+        <use href="#rhi-pod" x="361" y="32" width="18" height="18" style="fill:var(--accent3); opacity:0.7;"/>
         <text x="400" y="52" class="label" text-anchor="middle">Pod B</text>
         <rect x="335" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="400" y="93" class="label-code" text-anchor="middle" style="fill:var(--accent3); font-size:11px;">eth0 (veth end)</text>
@@ -483,6 +522,7 @@
         <line x1="400" y1="105" x2="400" y2="195" style="stroke:var(--accent3); stroke-width:3; stroke-dasharray:8 4;"/>
 
         <rect x="60" y="195" width="480" height="50" class="bridge-box"/>
+        <use href="#rhi-bridge" x="207" y="202" width="22" height="22" style="fill:var(--warn); opacity:0.8;"/>
         <text x="300" y="225" class="label" text-anchor="middle" style="fill:var(--warn);">br-int / bridge / OVS</text>
 
         <line x1="300" y1="245" x2="300" y2="280" class="cable"/>
@@ -509,10 +549,13 @@
     <div class="diagram">
       <svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg">
         <rect x="20" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2.5"/>
+        <use href="#rhi-bridge" x="35" y="148" width="20" height="20" style="fill:var(--vlan100); opacity:0.7;"/>
         <text x="140" y="167" class="label" text-anchor="middle" style="fill:var(--vlan100);">br-100</text>
         <rect x="290" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2.5"/>
+        <use href="#rhi-bridge" x="305" y="148" width="20" height="20" style="fill:var(--vlan200); opacity:0.7;"/>
         <text x="410" y="167" class="label" text-anchor="middle" style="fill:var(--vlan200);">br-200</text>
         <rect x="560" y="140" width="240" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2.5"/>
+        <use href="#rhi-bridge" x="575" y="148" width="20" height="20" style="fill:var(--vlan123); opacity:0.7;"/>
         <text x="680" y="167" class="label" text-anchor="middle" style="fill:var(--vlan123);">br-123</text>
 
         <rect x="50" y="30" width="100" height="55" class="ns-box"/>
@@ -531,6 +574,7 @@
         <line x1="410" y1="85" x2="410" y2="140" class="cable" style="stroke:var(--vlan200);"/>
 
         <rect x="160" y="225" width="400" height="65" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
+        <use href="#rhi-firewall" x="283" y="232" width="20" height="20" style="fill:var(--danger); opacity:0.8;"/>
         <text x="360" y="250" class="label" text-anchor="middle" style="fill:var(--danger);">Firewall VM</text>
         <text x="360" y="272" class="label-sm" text-anchor="middle">Needs one NIC per VLAN &mdash; cannot use a single 802.1Q trunk</text>
         <line x1="200" y1="225" x2="100" y2="185" class="cable" style="stroke:var(--vlan100); stroke-dasharray:4 3;"/>
@@ -565,10 +609,12 @@
     <div class="diagram">
       <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
         <rect x="100" y="170" width="600" height="55" class="bridge-box"/>
+        <use href="#rhi-bridge" x="290" y="177" width="22" height="22" style="fill:var(--warn); opacity:0.8;"/>
         <text x="400" y="195" class="label" text-anchor="middle" style="fill:var(--warn); font-size:16px;">br-trunk</text>
         <text x="400" y="212" class="label-sm" text-anchor="middle">vlan_filtering 1</text>
 
         <rect x="50" y="20" width="170" height="105" class="ns-box"/>
+        <use href="#rhi-firewall" x="60" y="26" width="16" height="16" style="fill:var(--accent); opacity:0.7;"/>
         <text x="135" y="42" class="label" text-anchor="middle" style="font-size:14px;">guest-a (firewall)</text>
         <text x="135" y="64" class="label-sm" text-anchor="middle">single NIC &mdash; sees tagged frames</text>
         <rect x="74" y="78" width="55" height="24" rx="4" fill="var(--vlan100)" opacity="0.3" stroke="var(--vlan100)" stroke-width="1.5"/>
@@ -770,25 +816,30 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram" style="margin-top:0.6em;">
       <svg viewBox="0 0 800 230" xmlns="http://www.w3.org/2000/svg">
         <rect x="80" y="130" width="640" height="48" class="bridge-box"/>
+        <use href="#rhi-bridge" x="265" y="137" width="20" height="20" style="fill:var(--warn); opacity:0.8;"/>
         <text x="400" y="152" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-trunk (vlan_filtering 1)</text>
         <text x="400" y="168" class="label-sm" text-anchor="middle">Per-port VLAN allow-lists &mdash; this is what Bridge CNI does on OCP</text>
 
         <rect x="60" y="15" width="140" height="75" rx="6" fill="#1f1515" stroke="var(--danger)" stroke-width="1.5"/>
+        <use href="#rhi-firewall" x="73" y="24" width="14" height="14" style="fill:var(--danger); opacity:0.7;"/>
         <text x="130" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:12px;">fw-dmz</text>
         <text x="130" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 100,200</text>
         <line x1="130" y1="90" x2="130" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
 
         <rect x="230" y="15" width="140" height="75" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
+        <use href="#rhi-firewall" x="243" y="24" width="14" height="14" style="fill:var(--vlan123); opacity:0.7;"/>
         <text x="300" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:12px;">fw-internal</text>
         <text x="300" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">trunk 123,150</text>
         <line x1="300" y1="90" x2="300" y2="130" style="stroke:var(--warn); stroke-width:2.5;"/>
 
         <rect x="410" y="15" width="140" height="75" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
+        <use href="#rhi-network" x="423" y="24" width="14" height="14" style="fill:var(--accent3); opacity:0.7;"/>
         <text x="480" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">monitor</text>
         <text x="480" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">all VLANs</text>
         <line x1="480" y1="90" x2="480" y2="130" style="stroke:var(--accent3); stroke-width:2.5;"/>
 
         <rect x="590" y="15" width="140" height="75" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
+        <use href="#rhi-server" x="603" y="24" width="14" height="14" style="fill:var(--vlan100); opacity:0.7;"/>
         <text x="660" y="38" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a</text>
         <text x="660" y="55" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">access 100</text>
         <line x1="660" y1="90" x2="660" y2="130" style="stroke:var(--accent); stroke-width:2.5;"/>
@@ -844,6 +895,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram">
       <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
         <rect x="200" y="10" width="400" height="50" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
+        <use href="#rhi-vm" x="283" y="16" width="20" height="20" style="fill:var(--danger); opacity:0.7;"/>
         <text x="400" y="32" class="label" text-anchor="middle" style="fill:var(--danger);">KubeVirt VM (fw-dmz)</text>
         <text x="400" y="50" class="label-sm" text-anchor="middle">eth1.100, eth1.200 &mdash; VLAN sub-interfaces</text>
 
@@ -863,6 +915,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <rect x="140" y="196" width="520" height="48" rx="8"/>
         <rect x="140" y="196" width="260" height="48" rx="8" fill="#292929" stroke="var(--warn)" stroke-width="2"/>
+        <use href="#rhi-bridge" x="152" y="202" width="18" height="18" style="fill:var(--warn); opacity:0.7;"/>
         <text x="270" y="216" class="label" text-anchor="middle" style="fill:var(--warn); font-size:13px;">Linux bridge br-secondary</text>
         <text x="270" y="234" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Bridge CNI vlanTrunk</text>
         <rect x="400" y="196" width="260" height="48" rx="8" fill="#1f1f1f" stroke="var(--accent2)" stroke-width="2"/>
@@ -1212,10 +1265,12 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
     <div class="diagram">
       <svg viewBox="0 0 800 270" xmlns="http://www.w3.org/2000/svg">
         <rect x="80" y="140" width="640" height="48" class="bridge-box"/>
+        <use href="#rhi-bridge" x="232" y="147" width="18" height="18" style="fill:var(--warn); opacity:0.8;"/>
         <text x="400" y="162" class="label" text-anchor="middle" style="fill:var(--warn); font-size:15px;">br-secondary (Linux bridge, vlan_filtering)</text>
         <text x="400" y="178" class="label-sm" text-anchor="middle">NMState NNCP with trunk-tags on ens4</text>
 
         <rect x="70" y="15" width="200" height="85" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
+        <use href="#rhi-vm" x="80" y="22" width="16" height="16" style="fill:var(--danger); opacity:0.7;"/>
         <text x="170" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="170" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; single trunk NIC</text>
         <rect x="100" y="64" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
@@ -1226,6 +1281,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <line x1="170" y1="100" x2="170" y2="140" style="stroke:var(--warn); stroke-width:2.5;"/>
 
         <rect x="310" y="15" width="200" height="85" rx="8" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2"/>
+        <use href="#rhi-vm" x="320" y="22" width="16" height="16" style="fill:var(--vlan123); opacity:0.7;"/>
         <text x="410" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:13px;">fw-internal VM</text>
         <text x="410" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; single trunk NIC</text>
         <rect x="345" y="64" width="50" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
@@ -1236,6 +1292,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <line x1="410" y1="100" x2="410" y2="140" style="stroke:var(--warn); stroke-width:2.5;"/>
 
         <rect x="550" y="15" width="190" height="85" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
+        <use href="#rhi-vm" x="560" y="22" width="16" height="16" style="fill:var(--accent3); opacity:0.7;"/>
         <text x="645" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">monitor VM</text>
         <text x="645" y="56" class="label-sm" text-anchor="middle">eth1 &mdash; all VLANs</text>
         <rect x="570" y="64" width="28" height="16" rx="2" fill="var(--vlan100)" opacity="0.4"/>
@@ -1481,6 +1538,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="28" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
         <rect x="40" y="40" width="210" height="120" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
+        <use href="#rhi-vm" x="52" y="47" width="16" height="16" style="fill:var(--danger); opacity:0.7;"/>
         <text x="145" y="62" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="145" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 100 (untagged)</text>
         <text x="145" y="95" class="label-sm" text-anchor="middle">eth2: VLAN 200 (untagged)</text>
@@ -1488,12 +1546,14 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="145" y="150" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
 
         <rect x="290" y="40" width="200" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
+        <use href="#rhi-vm" x="302" y="47" width="16" height="16" style="fill:var(--vlan100); opacity:0.7;"/>
         <text x="390" y="62" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="390" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 100 (untagged)</text>
         <text x="390" y="100" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100</text>
         <text x="390" y="150" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: &#x2713;</text>
 
         <rect x="530" y="40" width="200" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
+        <use href="#rhi-vm" x="542" y="47" width="16" height="16" style="fill:var(--vlan200); opacity:0.7;"/>
         <text x="630" y="62" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="630" y="80" class="label-sm" text-anchor="middle">eth1: VLAN 200 (untagged)</text>
         <text x="630" y="100" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan200</text>
@@ -1526,6 +1586,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="400" y="25" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
         <rect x="30" y="35" width="200" height="110" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
+        <use href="#rhi-firewall" x="42" y="42" width="16" height="16" style="fill:var(--danger); opacity:0.7;"/>
         <text x="130" y="58" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
         <text x="130" y="76" class="label-sm" text-anchor="middle">eth1: trunk 100,200</text>
         <text x="130" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">Bridge CNI vlanTrunk NAD</text>
@@ -1533,12 +1594,14 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="130" y="132" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:8px;">Policy: the appliance itself</text>
 
         <rect x="370" y="35" width="180" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
+        <use href="#rhi-vm" x="382" y="42" width="16" height="16" style="fill:var(--vlan100); opacity:0.7;"/>
         <text x="460" y="58" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">tenant-a VM</text>
         <text x="460" y="76" class="label-sm" text-anchor="middle">eth1: VLAN 100 untag</text>
         <text x="460" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan100</text>
         <text x="460" y="118" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:8px;">NetworkPolicy: &#x2713;</text>
 
         <rect x="580" y="35" width="180" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
+        <use href="#rhi-vm" x="592" y="42" width="16" height="16" style="fill:var(--vlan200); opacity:0.7;"/>
         <text x="670" y="58" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">tenant-b VM</text>
         <text x="670" y="76" class="label-sm" text-anchor="middle">eth1: VLAN 200 untag</text>
         <text x="670" y="96" class="label-code" text-anchor="middle" style="font-size:9px;">cudn-vlan200</text>
@@ -1591,6 +1654,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <!-- ========== FIREWALL VM ========== -->
         <rect x="25" y="50" width="400" height="160" rx="10" fill="#1f1515" stroke="var(--danger)" stroke-width="2.5"/>
+        <use href="#rhi-firewall" x="133" y="54" width="18" height="18" style="fill:var(--danger); opacity:0.8;"/>
         <text x="225" y="70" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">fw-dmz VM (firewall)</text>
         <text x="225" y="85" class="label-sm" text-anchor="middle" style="fill:var(--accent); font-size:9px;">routes internal ↔ external</text>
 
@@ -1635,6 +1699,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
 
         <!-- ========== TENANT VMs ========== -->
         <rect x="480" y="50" width="170" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
+        <use href="#rhi-vm" x="490" y="56" width="14" height="14" style="fill:var(--vlan100); opacity:0.7;"/>
         <text x="565" y="70" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:12px;">tenant-a VM</text>
         <text x="565" y="86" class="label-sm" text-anchor="middle" style="font-size:9px;">eth1: VLAN 100 untag</text>
         <text x="565" y="100" class="label-code" text-anchor="middle" style="font-size:8px;">cudn-internal-100</text>
@@ -1642,6 +1707,7 @@ oc debug node/&lt;node&gt; -- chroot /host ovs-vsctl show</code></pre>
         <text x="565" y="142" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:7px;">No external access</text>
 
         <rect x="690" y="50" width="170" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
+        <use href="#rhi-vm" x="700" y="56" width="14" height="14" style="fill:var(--vlan200); opacity:0.7;"/>
         <text x="775" y="70" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:12px;">tenant-b VM</text>
         <text x="775" y="86" class="label-sm" text-anchor="middle" style="font-size:9px;">eth1: VLAN 200 untag</text>
         <text x="775" y="100" class="label-code" text-anchor="middle" style="font-size:8px;">cudn-internal-200</text>

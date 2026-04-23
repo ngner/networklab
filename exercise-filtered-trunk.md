@@ -28,7 +28,7 @@ on a single access VLAN.
 ### Node network: linux-bridge on a bond (NNCP)
 
 The bridge CNI NADs reference `br-secondary`, a VLAN-filtering linux-bridge
-on each node. In a production or lab environment with two physical NICs
+on each node. In a production environment with two physical NICs
 available for secondary traffic, create it on top of a bond for redundancy.
 
 This NNCP bonds `enp7s0` and `enp8s0` in active-backup mode, then creates
@@ -67,41 +67,6 @@ spec:
                       max: 4094
 ```
 
-> In this lab the nodes only have a single secondary NIC (`enp7s0`), so the
-> NNCP uses `enp7s0` directly without a bond:
->
-> ```yaml
-> apiVersion: nmstate.io/v1
-> kind: NodeNetworkConfigurationPolicy
-> metadata:
->   name: br-secondary
-> spec:
->   desiredState:
->     interfaces:
->       - name: br-secondary
->         type: linux-bridge
->         state: up
->         bridge:
->           options:
->             stp:
->               enabled: false
->           port:
->             - name: enp7s0
-> ```
-
-### Host bridge VLAN configuration
-
-The host `br-lab` bridge uses `vlan_filtering`. Add the lab VLANs to every
-member port so tagged frames can cross between nodes:
-
-```bash
-for dev in $(bridge link show master br-lab | awk '{print $2}' | cut -d@ -f1); do
-  sudo bridge vlan add vid 100 dev $dev
-  sudo bridge vlan add vid 200 dev $dev
-done
-sudo bridge vlan add vid 100 dev br-lab self
-sudo bridge vlan add vid 200 dev br-lab self
-```
 
 ### Fedora NIC naming
 

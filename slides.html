@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Linux Networking &amp; KubeVirt VLAN Trunks — Red Hat</title>
+<title>VM Networking on OpenShift — A Consultant's Decision Guide</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link href="https://fonts.googleapis.com/css2?family=Red+Hat+Display:wght@300;400;500;600;700;800;900&family=Red+Hat+Text:wght@300;400;500;600;700&family=Red+Hat+Mono:wght@400;500;600;700&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/reveal.js@5.1.0/dist/reveal.css">
@@ -16,16 +16,16 @@
   --bg-card-alt: #292929;
   --fg: #e0e0e0;
   --fg-dim: #a3a3a3;
-  --accent: #ee0000;
+  --accent: #ff5555;
   --accent2: #f5921b;
-  --accent3: #0066cc;
+  --accent3: #4d94ff;
   --vlan100: #4394e5;
   --vlan200: #f8ae54;
   --vlan123: #37a3a3;
   --vlan150: #5e40be;
   --vlan300: #f4784a;
   --danger: #f0561d;
-  --success: #63993d;
+  --success: #7ab556;
   --warn: #dca614;
 }
 
@@ -89,6 +89,7 @@
 .phase-badge.p3 { background: linear-gradient(135deg, var(--accent2), #9e4a06); }
 .phase-badge.p4 { background: linear-gradient(135deg, var(--vlan150), #3d2785); }
 .phase-badge.p5 { background: linear-gradient(135deg, var(--vlan123), #147878); }
+.phase-badge.decision { background: linear-gradient(135deg, var(--success), #3d6b1f); }
 
 .subtitle {
   color: var(--fg-dim);
@@ -96,7 +97,6 @@
   margin-top: -0.3em;
 }
 
-/* Diagram containers */
 .diagram {
   display: flex;
   justify-content: center;
@@ -110,14 +110,12 @@
   filter: drop-shadow(0 2px 12px rgba(0,0,0,0.3));
 }
 
-/* Network element styles used in SVG */
 .ns-box { fill: var(--bg-card); stroke: var(--accent); stroke-width: 2; rx: 8; }
 .ns-box-alt { fill: var(--bg-card); stroke: var(--accent3); stroke-width: 2; rx: 8; }
 .bridge-box { fill: #292929; stroke: var(--warn); stroke-width: 2.5; rx: 6; }
 .ovs-box { fill: #292929; stroke: var(--accent2); stroke-width: 2.5; rx: 6; }
 .veth-line { stroke: var(--accent); stroke-width: 3; stroke-dasharray: 8 4; }
 .cable { stroke: var(--fg-dim); stroke-width: 2; }
-.cable-tagged { stroke-width: 3; }
 .label { font-family: 'Red Hat Display', sans-serif; fill: #fff; font-size: 14px; font-weight: 600; }
 .label-sm { font-family: 'Red Hat Mono', monospace; fill: var(--fg-dim); font-size: 11px; }
 .label-code { font-family: 'Red Hat Mono', monospace; fill: var(--accent); font-size: 12px; }
@@ -127,7 +125,6 @@
   font-weight: 600;
 }
 
-/* Comparison grid */
 .compare-grid {
   display: grid;
   grid-template-columns: 1fr 1fr;
@@ -149,7 +146,6 @@
 .compare-card.bad { border-color: var(--danger); }
 .compare-card.warn { border-color: var(--warn); }
 
-/* Badge chips */
 .chip {
   display: inline-block;
   padding: 0.15em 0.5em;
@@ -162,12 +158,9 @@
 .chip.v100 { background: var(--vlan100); color: #000; }
 .chip.v200 { background: var(--vlan200); color: #000; }
 .chip.v123 { background: var(--vlan123); color: #000; }
-.chip.v150 { background: var(--vlan150); color: #000; }
-.chip.v300 { background: var(--vlan300); color: #000; }
+.chip.v150 { background: var(--vlan150); color: #fff; }
 .chip.trunk { background: transparent; border: 2px solid var(--warn); color: var(--warn); }
-.chip.access { background: transparent; border: 2px solid var(--accent); color: var(--accent); }
 
-/* Styled table */
 .reveal table {
   border-collapse: separate;
   border-spacing: 0;
@@ -192,7 +185,6 @@
 }
 .reveal table tr:last-child td { border-bottom: none; }
 
-/* Punchline */
 .punchline {
   background: var(--bg-card);
   border-left: 4px solid var(--accent);
@@ -202,29 +194,6 @@
   font-size: 0.85em;
 }
 
-/* Step indicators */
-.steps {
-  display: flex;
-  gap: 0.5em;
-  align-items: center;
-  margin: 0.5em 0;
-}
-.step-num {
-  width: 28px; height: 28px;
-  border-radius: 50%;
-  background: var(--accent);
-  color: var(--bg);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-weight: 700;
-  font-size: 0.7em;
-  flex-shrink: 0;
-}
-.step-num.red { background: var(--danger); }
-.step-num.yellow { background: var(--warn); color: var(--bg); }
-
-/* Key takeaway box */
 .takeaway {
   background: linear-gradient(135deg, rgba(238,0,0,0.08), rgba(238,0,0,0.02));
   border: 1px solid rgba(238,0,0,0.3);
@@ -234,12 +203,11 @@
   font-size: 0.8em;
 }
 .takeaway::before {
-  content: '→ ';
+  content: '\2192  ';
   color: var(--accent);
   font-weight: 700;
 }
 
-/* Lab ref */
 .lab-ref {
   color: var(--fg-dim);
   font-size: 0.55em;
@@ -248,7 +216,6 @@
   right: 40px;
 }
 
-/* Flowchart decision */
 .decision-box {
   background: var(--bg-card);
   border: 2px solid var(--warn);
@@ -262,28 +229,25 @@
 .answer-row {
   display: flex;
   justify-content: center;
-  gap: 2em;
+  gap: 1.5em;
   margin-top: 1em;
 }
 .answer-card {
   background: var(--bg-card);
   border-radius: 8px;
-  padding: 1em 1.5em;
+  padding: 1em 1.2em;
   text-align: center;
-  width: 240px;
+  width: 220px;
 }
 .answer-card.green { border: 2px solid var(--success); }
 .answer-card.orange { border: 2px solid var(--accent2); }
 .answer-card.blue { border: 2px solid var(--accent3); }
 
-/* progress bar */
+.reveal pre code .hljs-keyword { color: #ff4d90; }
 .reveal .progress { color: var(--accent); height: 4px; }
 .reveal .controls { color: var(--accent); }
-
-/* Slide number */
 .reveal .slide-number { color: var(--fg-dim); font-family: 'Red Hat Mono', monospace; font-size: 14px; }
 
-/* Phase title slides */
 .phase-title {
   display: flex;
   flex-direction: column;
@@ -295,53 +259,17 @@
 .phase-title h2 { font-size: 2em; margin-bottom: 0.2em; }
 .phase-title .subtitle { font-size: 0.8em; }
 
-/* animation for packet flow */
-@keyframes packet-flow {
-  0% { offset-distance: 0%; opacity: 0; }
-  10% { opacity: 1; }
-  90% { opacity: 1; }
-  100% { offset-distance: 100%; opacity: 0; }
-}
-.packet-anim {
-  animation: packet-flow 3s ease-in-out infinite;
-  offset-rotate: 0deg;
-}
-
-/* Fade in fragments nicely */
 .reveal .fragment { transition: all 0.4s ease; }
 
-/* Stack diagram */
-.stack {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 0;
-  margin: 1em auto;
-  max-width: 500px;
+.constraint-box {
+  background: var(--bg-card);
+  border-left: 3px solid var(--danger);
+  padding: 0.5em 0.8em;
+  border-radius: 0 6px 6px 0;
+  margin: 0.3em 0;
+  font-size: 0.65em;
 }
-.stack-layer {
-  width: 100%;
-  padding: 0.6em 1em;
-  text-align: center;
-  font-size: 0.75em;
-  font-weight: 600;
-  border: 1px solid;
-  position: relative;
-}
-.stack-layer::after {
-  content: '';
-  position: absolute;
-  bottom: -12px;
-  left: 50%;
-  transform: translateX(-50%);
-  width: 2px;
-  height: 12px;
-  background: var(--fg-dim);
-  z-index: 1;
-}
-.stack-layer:last-child::after { display: none; }
 
-/* Dark mode print */
 @media print {
   .reveal-viewport { background: #fff; }
   .reveal, .reveal h1, .reveal h2, .reveal h3 { color: #000; }
@@ -353,54 +281,77 @@
 <div class="slides">
 
 <!-- ============================================================ -->
-<!-- TITLE -->
+<!-- SECTION 1: TITLE + THREE PERSONAS -->
 <!-- ============================================================ -->
 <section>
   <section data-background="linear-gradient(135deg, #151515 0%, #1f1f1f 50%, #151515 100%)">
     <div style="text-align:center; padding-top:0.5em;">
       <div style="margin-bottom:0.8em;">
-        <span style="font-family:'Red Hat Display',sans-serif; font-weight:700; font-size:1.4em; color:#ee0000; letter-spacing:-0.02em;">Red Hat</span>
+        <span style="font-family:'Red Hat Display',sans-serif; font-weight:700; font-size:1.4em; color:var(--accent); letter-spacing:-0.02em;">Red Hat</span>
       </div>
-      <h1 style="font-size:2.2em; line-height:1.15;">Linux networking<br>&amp; KubeVirt<br><span style="color:var(--accent);">VLAN trunks</span></h1>
-      <p style="color:var(--fg-dim); font-size:0.7em; margin-top:1em;">
-        From veth pairs to OVN-Kubernetes &mdash; a visual guide
+      <h1 style="font-size:2em; line-height:1.15;">VM Networking<br>on <span style="color:var(--accent);">OpenShift</span></h1>
+      <p style="color:var(--fg-dim); font-size:0.7em; margin-top:0.8em;">
+        A consultant's decision guide &mdash; OCP 4.17+
+      </p>
+      <p style="color:var(--fg-dim); font-size:0.55em; margin-top:0.5em;">
+        From Linux primitives to KubeVirt &mdash; what to use, when, and why
       </p>
       <div style="margin-top:2em; display:flex; justify-content:center; gap:0.8em; flex-wrap:wrap;">
-        <span class="chip v100">VLAN 100</span>
-        <span class="chip v200">VLAN 200</span>
-        <span class="chip v123">VLAN 123</span>
-        <span class="chip v150">VLAN 150</span>
+        <span class="chip v100">Normal VM</span>
+        <span class="chip v200">VPC Tenant</span>
+        <span class="chip trunk">Network Appliance</span>
       </div>
       <p style="color:var(--fg-dim); font-size:0.5em; margin-top:2.5em;">
-        Lab guide: <code>consolidated-plan.md</code> &nbsp;|&nbsp; ← → to navigate &nbsp;|&nbsp; ↑ ↓ for sub-sections
+        Lab: <code>consolidated-plan.md</code> &nbsp;|&nbsp; Cheatsheet: <code>cheatsheet.md</code> &nbsp;|&nbsp; &larr; &rarr; navigate
       </p>
     </div>
   </section>
 
   <section>
+    <h3>The Three VM Personas</h3>
+    <p class="subtitle">Every network decision maps to one of these</p>
+    <table style="font-size:0.62em; margin-top:1em;">
+      <tr><th>Persona</th><th>Description</th><th>Best Attachment</th></tr>
+      <tr>
+        <td style="color:var(--vlan100); font-weight:600;">Normal VM</td>
+        <td>Simple IP on one or more VLANs. No trunk, no 802.1Q tags.</td>
+        <td>Linux-bridge NAD or CUDN Localnet</td>
+      </tr>
+      <tr>
+        <td style="color:var(--vlan200); font-weight:600;">VPC-like Tenant</td>
+        <td>Namespace isolation, NetworkPolicy, persistent IPs, live migration.</td>
+        <td>Primary UDN Layer2 or CUDN Localnet</td>
+      </tr>
+      <tr>
+        <td style="color:var(--warn); font-weight:600;">Network Appliance</td>
+        <td>Firewall/router expecting a raw 802.1Q trunk NIC with VLAN sub-interfaces.</td>
+        <td>Linux-bridge trunk NAD (<code>"vlan": 0</code>)</td>
+      </tr>
+    </table>
+    <div class="takeaway" style="margin-top:0.8em; font-size:0.7em;">Ask "what kind of VM?" first. The persona determines the mechanism &mdash; not the other way around.</div>
+  </section>
+
+  <section>
     <h3>How this deck works</h3>
-    <div style="font-size:0.8em; margin-top:1em;">
-      <p><strong>This deck</strong> = visual explainer &mdash; concepts, topology diagrams, "why it matters"</p>
-      <p><strong><code>consolidated-plan.md</code></strong> = lab manual &mdash; copy-paste commands, step-by-step</p>
-    </div>
-    <div style="margin-top:1.5em; font-size:0.75em;">
+    <div style="font-size:0.75em; margin-top:1em;">
       <table>
-        <tr><th>Phase</th><th>Topic</th><th>Environment</th></tr>
-        <tr><td style="color:var(--accent);">1</td><td>Linux networking primitives</td><td>Fedora VM + namespaces</td></tr>
-        <tr><td style="color:var(--accent3);">2</td><td>Open vSwitch (OVS)</td><td>Fedora VM + namespaces</td></tr>
-        <tr><td style="color:var(--accent2);">3</td><td>OVS vs Bridge side-by-side</td><td>Fedora VM + namespaces</td></tr>
-        <tr><td style="color:var(--vlan150);">4</td><td>OVN logical networking</td><td>Fedora VM</td></tr>
-        <tr><td style="color:var(--vlan100);">5</td><td>OpenShift + KubeVirt</td><td>OCP 4.21 cluster</td></tr>
+        <tr><th>Section</th><th>Topic</th><th>Environment</th></tr>
+        <tr><td style="color:var(--accent);">1&ndash;2</td><td>Linux networking primitives</td><td>Fedora VM + namespaces</td></tr>
+        <tr><td style="color:var(--accent3);">3</td><td>Open vSwitch (OVS) &mdash; and why OVS CNI is gone</td><td>Fedora VM + namespaces</td></tr>
+        <tr><td style="color:var(--accent2);">4</td><td>OVS vs Bridge side-by-side</td><td>Fedora VM + namespaces</td></tr>
+        <tr><td style="color:#b090e0;">5</td><td>OVN logical networking</td><td>Fedora VM</td></tr>
+        <tr><td style="color:var(--vlan123);">6</td><td>OpenShift 4.21 &mdash; Attachments, Constraints, Personas</td><td>OCP cluster</td></tr>
+        <tr><td style="color:var(--success);">7</td><td>Decision Framework</td><td>&mdash;</td></tr>
+        <tr><td>8</td><td>Lab pointers + resources</td><td>&mdash;</td></tr>
       </table>
     </div>
   </section>
 </section>
 
 <!-- ============================================================ -->
-<!-- PHASE 1: LINUX NETWORKING PRIMITIVES -->
+<!-- SECTION 2: PHASE 1 — LINUX PRIMITIVES -->
 <!-- ============================================================ -->
 <section>
-  <!-- Phase title -->
   <section>
     <div class="phase-title">
       <span class="phase-badge">Phase 1</span>
@@ -412,61 +363,11 @@
     </div>
   </section>
 
-  <!-- 1a: veth + namespaces -->
   <section>
     <span class="phase-badge">Phase 1a</span>
-    <h2>veth Pairs &amp; Network Namespaces</h2>
-    <div class="diagram">
-      <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
-        <!-- Namespace A -->
-        <rect x="40" y="40" width="240" height="220" class="ns-box"/>
-        <text x="160" y="30" class="label" text-anchor="middle" style="fill:var(--accent); font-size:13px;">Network Namespace</text>
-        <text x="160" y="72" class="label" text-anchor="middle">guest-a</text>
-        <text x="160" y="100" class="label-sm" text-anchor="middle">Own interfaces, routes,</text>
-        <text x="160" y="116" class="label-sm" text-anchor="middle">iptables, ARP cache</text>
-        <!-- veth-a inside -->
-        <rect x="100" y="145" width="120" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent)" stroke-width="2"/>
-        <text x="160" y="170" class="label-code" text-anchor="middle">veth-a</text>
-        <text x="160" y="210" class="label-sm" text-anchor="middle">10.0.0.1/24</text>
-        <!-- cable from veth-a down out of ns -->
-        <line x1="160" y1="185" x2="160" y2="275" class="veth-line"/>
-        <!-- host-side end -->
-        <rect x="100" y="260" width="120" height="30" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="160" y="280" class="label-sm" text-anchor="middle" style="fill:#fff;">veth-a-br</text>
-
-        <!-- Namespace B -->
-        <rect x="520" y="40" width="240" height="220" class="ns-box-alt"/>
-        <text x="640" y="30" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">Network Namespace</text>
-        <text x="640" y="72" class="label" text-anchor="middle">guest-b</text>
-        <text x="640" y="100" class="label-sm" text-anchor="middle">Completely isolated from</text>
-        <text x="640" y="116" class="label-sm" text-anchor="middle">host and other namespaces</text>
-        <rect x="580" y="145" width="120" height="40" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
-        <text x="640" y="170" class="label-code" text-anchor="middle" style="fill:var(--accent3);">veth-b</text>
-        <text x="640" y="210" class="label-sm" text-anchor="middle">10.0.0.2/24</text>
-        <line x1="640" y1="185" x2="640" y2="275" style="stroke:var(--accent3); stroke-width:3; stroke-dasharray:8 4;"/>
-        <rect x="580" y="260" width="120" height="30" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="640" y="280" class="label-sm" text-anchor="middle" style="fill:#fff;">veth-b-br</text>
-
-        <!-- No connection indicator -->
-        <text x="400" y="280" class="label" text-anchor="middle" style="fill:var(--danger); font-size:16px;">✕ no path</text>
-        <line x1="240" y1="275" x2="360" y2="275" style="stroke:var(--danger); stroke-width:2; stroke-dasharray: 4 4;"/>
-        <line x1="440" y1="275" x2="560" y2="275" style="stroke:var(--danger); stroke-width:2; stroke-dasharray: 4 4;"/>
-
-        <!-- Host label -->
-        <text x="400" y="310" class="label-sm" text-anchor="middle">Host namespace — -br ends need a bridge to connect</text>
-      </svg>
-    </div>
-    <div class="takeaway">A veth pair is a virtual cable. Without a bridge connecting the host-side ends, namespaces are completely isolated.</div>
-    <span class="lab-ref">Lab guide: Section 1a</span>
-  </section>
-
-  <!-- 1a continued: what K8s does -->
-  <section>
-    <span class="phase-badge">Phase 1a</span>
-    <h2>This Is How Kubernetes Works</h2>
+    <h2>veth Pairs &amp; Namespaces = Kubernetes</h2>
     <div class="diagram">
       <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
-        <!-- Pod namespace -->
         <rect x="40" y="20" width="200" height="140" class="ns-box"/>
         <text x="140" y="10" class="label" text-anchor="middle" style="fill:var(--accent); font-size:12px;">Pod namespace</text>
         <text x="140" y="52" class="label" text-anchor="middle">Pod A</text>
@@ -479,259 +380,126 @@
         <rect x="335" y="70" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
         <text x="400" y="93" class="label-code" text-anchor="middle" style="fill:var(--accent3); font-size:11px;">eth0 (veth end)</text>
 
-        <!-- veth lines down -->
         <line x1="140" y1="105" x2="140" y2="195" class="veth-line"/>
         <line x1="400" y1="105" x2="400" y2="195" style="stroke:var(--accent3); stroke-width:3; stroke-dasharray:8 4;"/>
 
-        <!-- Bridge -->
         <rect x="60" y="195" width="480" height="50" class="bridge-box"/>
         <text x="300" y="225" class="label" text-anchor="middle" style="fill:var(--warn);">br-int / bridge / OVS</text>
 
-        <!-- Down to physical -->
         <line x1="300" y1="245" x2="300" y2="280" class="cable"/>
         <rect x="220" y="275" width="160" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
         <text x="300" y="295" class="label-sm" text-anchor="middle" style="fill:#fff;">Physical NIC / Tunnel</text>
 
-        <!-- Annotation -->
         <text x="620" y="60" class="label-sm" style="fill:var(--fg-dim);">Container runtime:</text>
         <text x="620" y="78" class="label-sm" style="fill:var(--fg);">1. Create namespace</text>
         <text x="620" y="96" class="label-sm" style="fill:var(--fg);">2. Create veth pair</text>
         <text x="620" y="114" class="label-sm" style="fill:var(--fg);">3. Move one end into pod</text>
         <text x="620" y="132" class="label-sm" style="fill:var(--fg);">4. Plug other into bridge</text>
-        <text x="620" y="160" class="label-sm" style="fill:var(--accent);">↑ Exactly what we do in this lab</text>
       </svg>
     </div>
-    <div class="takeaway">Every exercise in this lab replicates the Kubernetes pod networking model — namespaces are "guests," veth pairs are their "NICs."</div>
-    <span class="lab-ref">Lab guide: Section 1a</span>
+    <div class="takeaway">Every lab exercise replicates the Kubernetes pod networking model &mdash; namespaces are "guests," veth pairs are their "NICs."</div>
+    <span class="lab-ref">Lab: Section 1a</span>
   </section>
 
-  <!-- 1b: VLAN-unaware bridge -->
   <section>
-    <span class="phase-badge">Phase 1b</span>
-    <h2>VLAN-Unaware Bridge</h2>
-    <p class="subtitle">One bridge per VLAN &mdash; the simplest model</p>
+    <span class="phase-badge">Phase 1b/1c</span>
+    <h2>VLAN-Aware Bridge &mdash; Used by Bridge CNI</h2>
+    <p class="subtitle">Single bridge, per-port VLAN filtering &mdash; trunk + access ports</p>
     <div class="diagram">
-      <svg viewBox="0 0 820 320" xmlns="http://www.w3.org/2000/svg">
-        <!-- Bridge 100 -->
-        <rect x="20" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2.5"/>
-        <text x="140" y="167" class="label" text-anchor="middle" style="fill:var(--vlan100);">br-100</text>
-        <!-- Bridge 200 -->
-        <rect x="290" y="140" width="240" height="45" rx="6" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2.5"/>
-        <text x="410" y="167" class="label" text-anchor="middle" style="fill:var(--vlan200);">br-200</text>
-        <!-- Bridge 123 -->
-        <rect x="560" y="140" width="240" height="45" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2.5"/>
-        <text x="680" y="167" class="label" text-anchor="middle" style="fill:var(--vlan123);">br-123</text>
+      <svg viewBox="0 0 800 300" xmlns="http://www.w3.org/2000/svg">
+        <rect x="100" y="140" width="600" height="50" class="bridge-box"/>
+        <text x="400" y="165" class="label" text-anchor="middle" style="fill:var(--warn); font-size:16px;">br-trunk</text>
+        <text x="400" y="182" class="label-sm" text-anchor="middle">vlan_filtering 1</text>
 
-        <!-- guest-a on br-100 -->
-        <rect x="50" y="30" width="100" height="55" class="ns-box"/>
-        <text x="100" y="55" class="label" text-anchor="middle" style="font-size:13px;">guest-a</text>
-        <text x="100" y="73" class="label-sm" text-anchor="middle">.0.100.1</text>
-        <line x1="100" y1="85" x2="100" y2="140" class="cable" style="stroke:var(--vlan100);"/>
+        <rect x="60" y="20" width="160" height="80" class="ns-box" style="stroke:var(--warn);"/>
+        <text x="140" y="42" class="label" text-anchor="middle" style="font-size:13px;">Appliance</text>
+        <text x="140" y="60" class="label-sm" text-anchor="middle">single NIC, tagged 802.1Q</text>
+        <rect x="82" y="72" width="48" height="20" rx="3" fill="var(--vlan100)" opacity="0.4"/>
+        <text x="106" y="87" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
+        <rect x="136" y="72" width="48" height="20" rx="3" fill="var(--vlan200)" opacity="0.4"/>
+        <text x="160" y="87" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
+        <line x1="140" y1="100" x2="140" y2="140" style="stroke:var(--warn); stroke-width:3;"/>
+        <text x="140" y="124" class="label-sm" text-anchor="middle" style="fill:var(--warn);">TRUNK</text>
 
-        <!-- guest-c on br-100 -->
-        <rect x="180" y="30" width="100" height="55" class="ns-box"/>
-        <text x="230" y="55" class="label" text-anchor="middle" style="font-size:13px;">guest-c</text>
-        <text x="230" y="73" class="label-sm" text-anchor="middle">.0.100.3</text>
-        <line x1="230" y1="85" x2="230" y2="140" class="cable" style="stroke:var(--vlan100);"/>
+        <rect x="320" y="30" width="160" height="70" class="ns-box-alt"/>
+        <text x="400" y="52" class="label" text-anchor="middle" style="font-size:13px;">Normal VM</text>
+        <text x="400" y="70" class="label-sm" text-anchor="middle">untagged, VLAN 100</text>
+        <line x1="400" y1="100" x2="400" y2="140" style="stroke:var(--accent); stroke-width:3;"/>
+        <text x="400" y="124" class="label-sm" text-anchor="middle" style="fill:var(--accent);">ACCESS</text>
 
-        <!-- guest-b on br-200 -->
-        <rect x="360" y="30" width="100" height="55" class="ns-box-alt"/>
-        <text x="410" y="55" class="label" text-anchor="middle" style="font-size:13px;">guest-b</text>
-        <text x="410" y="73" class="label-sm" text-anchor="middle">.0.200.1</text>
-        <line x1="410" y1="85" x2="410" y2="140" class="cable" style="stroke:var(--vlan200);"/>
+        <rect x="560" y="30" width="160" height="70" rx="8" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
+        <text x="640" y="52" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (uplink)</text>
+        <text x="640" y="70" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">100, 200</text>
+        <line x1="640" y1="100" x2="640" y2="140" style="stroke:var(--fg-dim); stroke-width:2;"/>
 
-        <!-- Firewall VM straddling bridges — the problem -->
-        <rect x="160" y="225" width="400" height="65" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <text x="360" y="250" class="label" text-anchor="middle" style="fill:var(--danger);">🔥 Firewall VM</text>
-        <text x="360" y="272" class="label-sm" text-anchor="middle">Needs one NIC per VLAN — cannot use a single 802.1Q trunk</text>
-        <!-- NICs from firewall up to bridges -->
-        <line x1="200" y1="225" x2="100" y2="185" class="cable" style="stroke:var(--vlan100); stroke-dasharray:4 3;"/>
-        <line x1="360" y1="225" x2="410" y2="185" class="cable" style="stroke:var(--vlan200); stroke-dasharray:4 3;"/>
-        <line x1="510" y1="225" x2="680" y2="185" class="cable" style="stroke:var(--vlan123); stroke-dasharray:4 3;"/>
-        <text x="200" y="218" class="label-sm" text-anchor="middle">NIC 1</text>
-        <text x="360" y="218" class="label-sm" text-anchor="middle">NIC 2</text>
-        <text x="510" y="218" class="label-sm" text-anchor="middle">NIC 3</text>
+        <rect x="100" y="220" width="300" height="55" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
+        <text x="120" y="242" class="label" style="font-size:12px; fill:var(--accent);">Access port (pvid untagged):</text>
+        <text x="120" y="260" class="label-sm">Bridge adds/removes VLAN tag automatically</text>
 
-        <!-- Check and X marks -->
-        <text x="165" y="108" class="label" text-anchor="middle" style="fill:var(--success); font-size:16px;">✓</text>
-        <text x="275" y="108" class="label" text-anchor="middle" style="fill:var(--danger); font-size:16px;">✕</text>
+        <rect x="420" y="220" width="280" height="55" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
+        <text x="440" y="242" class="label" style="font-size:12px; fill:var(--warn);">Trunk port:</text>
+        <text x="440" y="260" class="label-sm">Tagged 802.1Q frames pass through unchanged</text>
       </svg>
     </div>
-    <div class="compare-grid" style="font-size:0.7em;">
-      <div class="compare-card good">
-        <h4 style="color:var(--success);">Works for</h4>
-        Simple setups, static VLANs, few guests
-      </div>
-      <div class="compare-card bad">
-        <h4 style="color:var(--danger);">Breaks for</h4>
-        Firewall appliances expecting a single 802.1Q trunk NIC
-      </div>
-    </div>
-    <span class="lab-ref">Lab guide: Section 1b</span>
+    <div class="takeaway">One bridge, many VLANs. Trunk ports deliver tagged frames &mdash; exactly how firewall appliances expect their traffic.</div>
+    <span class="lab-ref">Lab: Sections 1b, 1c</span>
   </section>
 
-  <!-- 1c: VLAN-aware bridge -->
-  <section>
-    <span class="phase-badge">Phase 1c</span>
-    <h2>VLAN-Aware Bridge</h2>
-    <p class="subtitle">Single bridge, per-port VLAN filtering &mdash; used by CNAO / bridge CNI</p>
-    <div class="diagram">
-      <svg viewBox="0 0 800 380" xmlns="http://www.w3.org/2000/svg">
-        <!-- The single bridge -->
-        <rect x="100" y="170" width="600" height="55" class="bridge-box"/>
-        <text x="400" y="195" class="label" text-anchor="middle" style="fill:var(--warn); font-size:16px;">br-trunk</text>
-        <text x="400" y="212" class="label-sm" text-anchor="middle">vlan_filtering 1</text>
-
-        <!-- Trunk port: guest-a (firewall) -->
-        <rect x="50" y="20" width="170" height="105" class="ns-box"/>
-        <text x="135" y="42" class="label" text-anchor="middle" style="font-size:14px;">guest-a (firewall)</text>
-        <text x="135" y="64" class="label-sm" text-anchor="middle">single NIC — sees tagged frames</text>
-        <rect x="74" y="78" width="55" height="24" rx="4" fill="var(--vlan100)" opacity="0.3" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <text x="101" y="95" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">.100</text>
-        <rect x="138" y="78" width="55" height="24" rx="4" fill="var(--vlan200)" opacity="0.3" stroke="var(--vlan200)" stroke-width="1.5"/>
-        <text x="165" y="95" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">.200</text>
-        <!-- Cable down -->
-        <line x1="135" y1="125" x2="135" y2="170" style="stroke:var(--warn); stroke-width:3;"/>
-        <text x="135" y="148" class="label-sm" text-anchor="middle" style="fill:var(--warn);">TRUNK</text>
-
-        <!-- Access port: guest-b -->
-        <rect x="310" y="40" width="170" height="85" class="ns-box-alt"/>
-        <text x="395" y="62" class="label" text-anchor="middle" style="font-size:14px;">guest-b</text>
-        <text x="395" y="82" class="label-sm" text-anchor="middle">sees untagged frames</text>
-        <rect x="354" y="92" width="80" height="22" rx="4" fill="var(--vlan100)" opacity="0.3" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <text x="394" y="108" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">VLAN 100</text>
-        <line x1="395" y1="125" x2="395" y2="170" style="stroke:var(--accent); stroke-width:3;"/>
-        <text x="395" y="148" class="label-sm" text-anchor="middle" style="fill:var(--accent);">ACCESS</text>
-
-        <!-- Uplink: dummy0 -->
-        <rect x="590" y="42" width="130" height="50" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="655" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (uplink)</text>
-        <text x="655" y="80" class="vlan-tag" text-anchor="middle" style="fill:var(--fg-dim);">100, 200</text>
-        <line x1="655" y1="92" x2="655" y2="170" style="stroke:var(--fg-dim); stroke-width:2;"/>
-
-        <!-- Frame flow annotation -->
-        <rect x="80" y="255" width="310" height="110" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
-        <text x="100" y="280" class="label" style="font-size:13px; fill:var(--accent);">Access port ingress:</text>
-        <text x="100" y="300" class="label-sm">Untagged frame arrives →</text>
-        <text x="100" y="316" class="label-sm">Bridge adds VLAN 100 tag (PVID)</text>
-        <text x="100" y="340" class="label" style="font-size:13px; fill:var(--accent);">Access port egress:</text>
-        <text x="100" y="358" class="label-sm">Bridge strips VLAN tag → guest sees plain ethernet</text>
-
-        <rect x="420" y="255" width="310" height="110" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
-        <text x="440" y="280" class="label" style="font-size:13px; fill:var(--warn);">Trunk port:</text>
-        <text x="440" y="300" class="label-sm">Tagged frames pass through unchanged</text>
-        <text x="440" y="316" class="label-sm">Guest must create sub-interfaces:</text>
-        <text x="440" y="340" class="label-code" style="font-size:11px;">ip link add link veth-a</text>
-        <text x="440" y="356" class="label-code" style="font-size:11px;">  name veth-a.100 type vlan id 100</text>
-      </svg>
-    </div>
-    <div class="takeaway">One bridge, many VLANs. Trunk ports deliver tagged 802.1Q frames — exactly how firewall appliances expect their traffic.</div>
-    <span class="lab-ref">Lab guide: Section 1c</span>
-  </section>
-
-  <!-- 802.1Q frame anatomy -->
-  <section>
-    <span class="phase-badge">Phase 1c</span>
-    <h2>802.1Q Frame Anatomy</h2>
-    <div class="diagram" style="margin-top:1.5em;">
-      <svg viewBox="0 0 800 220" xmlns="http://www.w3.org/2000/svg">
-        <!-- Untagged frame -->
-        <text x="20" y="28" class="label" style="font-size:13px; fill:var(--fg-dim);">Untagged frame:</text>
-        <rect x="20" y="40" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="80" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">Dst MAC</text>
-        <rect x="140" y="40" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="200" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">Src MAC</text>
-        <rect x="260" y="40" width="90" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="305" y="65" class="label-sm" text-anchor="middle" style="fill:#fff;">EtherType</text>
-        <rect x="350" y="40" width="320" height="40" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="510" y="65" class="label-sm" text-anchor="middle">Payload ...</text>
-
-        <!-- Tagged frame -->
-        <text x="20" y="118" class="label" style="font-size:13px; fill:var(--fg-dim);">Tagged frame:</text>
-        <rect x="20" y="130" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="80" y="155" class="label-sm" text-anchor="middle" style="fill:#fff;">Dst MAC</text>
-        <rect x="140" y="130" width="120" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="200" y="155" class="label-sm" text-anchor="middle" style="fill:#fff;">Src MAC</text>
-
-        <!-- The VLAN tag — highlighted -->
-        <rect x="260" y="124" width="130" height="52" rx="4" fill="var(--warn)" opacity="0.15" stroke="var(--warn)" stroke-width="2.5"/>
-        <text x="325" y="147" class="label" text-anchor="middle" style="fill:var(--warn); font-size:13px;">0x8100</text>
-        <text x="325" y="165" class="label-sm" text-anchor="middle" style="fill:var(--warn);">VLAN ID + PRI</text>
-        <text x="325" y="118" class="label-sm" text-anchor="middle" style="fill:var(--warn);">← 4 bytes inserted</text>
-
-        <rect x="390" y="130" width="90" height="40" rx="4" fill="#292929" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="435" y="155" class="label-sm" text-anchor="middle" style="fill:#fff;">EtherType</text>
-        <rect x="480" y="130" width="220" height="40" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="590" y="155" class="label-sm" text-anchor="middle">Payload ...</text>
-
-        <!-- Annotations -->
-        <text x="20" y="205" class="label-sm" style="fill:var(--accent);"><tspan font-weight="600">Access port (pvid untagged)</tspan>: bridge inserts/removes this tag automatically</text>
-        <text x="20" y="218" class="label-sm" style="fill:var(--warn);"><tspan font-weight="600">Trunk port</tspan>: tag passes through — guest handles VLAN sub-interfaces</text>
-      </svg>
-    </div>
-    <span class="lab-ref">Lab guide: Section 1c</span>
-  </section>
-
-  <!-- 1d/1e: macvlan vs ipvlan -->
   <section>
     <span class="phase-badge">Phase 1d/1e</span>
     <h2>macvlan vs ipvlan</h2>
     <div class="compare-grid" style="margin-top:0.6em;">
       <div class="compare-card">
         <h4 style="color:var(--accent);">macvlan</h4>
-        <div class="diagram" style="margin:0.5em 0;">
-          <svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
-            <rect x="110" y="140" width="130" height="35" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-            <text x="175" y="162" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (parent)</text>
-            <text x="175" y="195" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">MAC: aa:bb:cc:00:00:01</text>
-            <!-- Sub-interfaces with unique MACs -->
-            <rect x="20" y="30" width="130" height="50" class="ns-box" style="stroke:var(--vlan100);"/>
-            <text x="85" y="52" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">macvlan0</text>
-            <text x="85" y="68" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">MAC: ...:02</text>
-            <rect x="190" y="30" width="130" height="50" class="ns-box" style="stroke:var(--vlan200);"/>
-            <text x="255" y="52" class="label-sm" text-anchor="middle" style="fill:var(--vlan200);">macvlan1</text>
-            <text x="255" y="68" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">MAC: ...:03</text>
-            <line x1="85" y1="80" x2="155" y2="140" class="cable" style="stroke:var(--vlan100);"/>
-            <line x1="255" y1="80" x2="195" y2="140" class="cable" style="stroke:var(--vlan200);"/>
-            <text x="175" y="120" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Unique MACs ↑</text>
-          </svg>
-        </div>
         <div style="font-size:0.7em; color:var(--fg-dim);">
-          Each sub-interface gets its own MAC. Switch sees N MACs per physical port.
+          Each sub-interface gets its own MAC. Switch sees N MACs per port.
           <br><strong style="color:var(--danger);">Cannot reach parent interface.</strong>
         </div>
       </div>
       <div class="compare-card">
         <h4 style="color:var(--accent3);">ipvlan</h4>
-        <div class="diagram" style="margin:0.5em 0;">
-          <svg viewBox="0 0 340 200" xmlns="http://www.w3.org/2000/svg">
-            <rect x="110" y="140" width="130" height="35" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-            <text x="175" y="162" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (parent)</text>
-            <text x="175" y="195" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">MAC: aa:bb:cc:00:00:01</text>
-            <rect x="20" y="30" width="130" height="50" class="ns-box" style="stroke:var(--vlan100);"/>
-            <text x="85" y="52" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">ipvlan0</text>
-            <text x="85" y="68" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">MAC: ...:01</text>
-            <rect x="190" y="30" width="130" height="50" class="ns-box" style="stroke:var(--vlan200);"/>
-            <text x="255" y="52" class="label-sm" text-anchor="middle" style="fill:var(--vlan200);">ipvlan1</text>
-            <text x="255" y="68" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">MAC: ...:01</text>
-            <line x1="85" y1="80" x2="155" y2="140" class="cable" style="stroke:var(--vlan100);"/>
-            <line x1="255" y1="80" x2="195" y2="140" class="cable" style="stroke:var(--vlan200);"/>
-            <text x="175" y="120" class="label-sm" text-anchor="middle" style="fill:var(--accent3);">Same MAC ↑</text>
-          </svg>
-        </div>
         <div style="font-size:0.7em; color:var(--fg-dim);">
           All sub-interfaces share parent's MAC. Switch sees 1 MAC.
           <br><strong style="color:var(--accent3);">L3 mode: no ARP, no broadcast.</strong>
         </div>
       </div>
     </div>
-    <div class="takeaway">Choose macvlan for L2 access (unique MACs). Choose ipvlan when the switch has MAC-per-port limits or you want L3-only isolation at scale.</div>
-    <span class="lab-ref">Lab guide: Sections 1d, 1e</span>
+    <div class="takeaway">Both are niche for KubeVirt. Cannot talk to host. Use linux-bridge NAD or CUDN Localnet instead for most VM workloads.</div>
+    <span class="lab-ref">Lab: Sections 1d, 1e</span>
+  </section>
+
+  <section>
+    <span class="phase-badge">Phase 1</span>
+    <h2>Why Phase 1 Matters for OCP</h2>
+    <table style="font-size:0.6em; margin-top:1em;">
+      <tr><th>Linux Primitive</th><th>OCP Equivalent</th><th>Used By</th></tr>
+      <tr>
+        <td>VLAN-aware bridge</td>
+        <td>Bridge CNI NAD on <code>br-secondary</code></td>
+        <td style="color:var(--warn);">Network Appliance (trunk), Normal VM (access)</td>
+      </tr>
+      <tr>
+        <td>veth pair + namespace</td>
+        <td>Pod networking (Kubernetes core)</td>
+        <td>Every pod and VM</td>
+      </tr>
+      <tr>
+        <td>VLAN sub-interfaces</td>
+        <td>Guest-side 802.1Q handling</td>
+        <td style="color:var(--warn);">Appliance on trunk NAD</td>
+      </tr>
+      <tr>
+        <td>macvlan / ipvlan</td>
+        <td>macvlan/ipvlan CNI NADs</td>
+        <td>Niche L2 passthrough</td>
+      </tr>
+    </table>
+    <span class="lab-ref">Lab: Phase 1</span>
   </section>
 </section>
 
 <!-- ============================================================ -->
-<!-- PHASE 2: OVS -->
+<!-- SECTION 3: PHASE 2 — OVS -->
 <!-- ============================================================ -->
 <section>
   <section>
@@ -742,126 +510,97 @@
     </div>
   </section>
 
-  <!-- OVS architecture -->
   <section>
     <span class="phase-badge p2">Phase 2</span>
     <h2>OVS Architecture</h2>
     <div class="diagram">
-      <svg viewBox="0 0 800 360" xmlns="http://www.w3.org/2000/svg">
-        <!-- Management layer -->
-        <rect x="50" y="15" width="700" height="65" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5" stroke-dasharray="6 3"/>
-        <text x="90" y="40" class="label" style="fill:var(--accent3); font-size:13px;">Management</text>
-        <rect x="240" y="30" width="140" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="310" y="53" class="label-code" text-anchor="middle" style="fill:var(--accent3);">ovs-vsctl</text>
-        <rect x="420" y="30" width="140" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="490" y="53" class="label-code" text-anchor="middle" style="fill:var(--accent3);">ovs-ofctl</text>
-        <rect x="600" y="30" width="130" height="35" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="665" y="53" class="label-code" text-anchor="middle" style="fill:var(--accent3);">OVSDB</text>
+      <svg viewBox="0 0 800 280" xmlns="http://www.w3.org/2000/svg">
+        <rect x="50" y="15" width="700" height="55" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5" stroke-dasharray="6 3"/>
+        <text x="90" y="38" class="label" style="fill:var(--accent3); font-size:13px;">Management</text>
+        <rect x="240" y="28" width="130" height="32" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
+        <text x="305" y="49" class="label-code" text-anchor="middle" style="fill:var(--accent3);">ovs-vsctl</text>
+        <rect x="400" y="28" width="130" height="32" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
+        <text x="465" y="49" class="label-code" text-anchor="middle" style="fill:var(--accent3);">ovs-ofctl</text>
+        <rect x="560" y="28" width="120" height="32" rx="6" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="1.5"/>
+        <text x="620" y="49" class="label-code" text-anchor="middle" style="fill:var(--accent3);">OVSDB</text>
 
-        <!-- vswitchd / OpenFlow -->
-        <rect x="50" y="100" width="700" height="110" rx="8" fill="#292929" stroke="var(--accent2)" stroke-width="2"/>
-        <text x="90" y="125" class="label" style="fill:var(--accent2); font-size:13px;">Userspace (ovs-vswitchd)</text>
-        <!-- Flow pipeline -->
-        <rect x="100" y="140" width="100" height="45" rx="6" fill="#29201a" stroke="var(--accent2)" stroke-width="1.5"/>
-        <text x="150" y="167" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Table 0</text>
-        <text x="218" y="167" class="label" text-anchor="middle" style="fill:var(--accent2);">→</text>
-        <rect x="235" y="140" width="100" height="45" rx="6" fill="#29201a" stroke="var(--accent2)" stroke-width="1.5"/>
-        <text x="285" y="167" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Table 1</text>
-        <text x="353" y="167" class="label" text-anchor="middle" style="fill:var(--accent2);">→</text>
-        <rect x="370" y="140" width="100" height="45" rx="6" fill="#29201a" stroke="var(--accent2)" stroke-width="1.5"/>
-        <text x="420" y="167" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Table N</text>
-        <text x="488" y="167" class="label" text-anchor="middle" style="fill:var(--accent2);">→</text>
-        <rect x="505" y="140" width="110" height="45" rx="6" fill="#1a1f1a" stroke="var(--success)" stroke-width="1.5"/>
-        <text x="560" y="167" class="label-sm" text-anchor="middle" style="fill:var(--success);">Output</text>
-        <text x="660" y="155" class="label-sm" style="fill:var(--fg-dim);">OpenFlow</text>
-        <text x="660" y="172" class="label-sm" style="fill:var(--fg-dim);">pipeline</text>
+        <rect x="50" y="85" width="700" height="80" rx="8" fill="#292929" stroke="var(--accent2)" stroke-width="2"/>
+        <text x="90" y="108" class="label" style="fill:var(--accent2); font-size:13px;">Userspace (ovs-vswitchd)</text>
+        <rect x="100" y="120" width="90" height="35" rx="6" fill="#29201a" stroke="var(--accent2)" stroke-width="1.5"/>
+        <text x="145" y="142" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Table 0</text>
+        <text x="205" y="142" class="label" text-anchor="middle" style="fill:var(--accent2);">&rarr;</text>
+        <rect x="220" y="120" width="90" height="35" rx="6" fill="#29201a" stroke="var(--accent2)" stroke-width="1.5"/>
+        <text x="265" y="142" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Table N</text>
+        <text x="325" y="142" class="label" text-anchor="middle" style="fill:var(--accent2);">&rarr;</text>
+        <rect x="340" y="120" width="100" height="35" rx="6" fill="#1a1f1a" stroke="var(--success)" stroke-width="1.5"/>
+        <text x="390" y="142" class="label-sm" text-anchor="middle" style="fill:var(--success);">Output</text>
+        <text x="560" y="135" class="label-sm" style="fill:var(--fg-dim);">OpenFlow pipeline</text>
 
-        <!-- Kernel datapath -->
-        <rect x="50" y="235" width="700" height="55" rx="8" fill="#1a1f1a" stroke="var(--success)" stroke-width="2"/>
-        <text x="90" y="260" class="label" style="fill:var(--success); font-size:13px;">Kernel datapath (fast path)</text>
-        <text x="400" y="275" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Megaflow cache — handles matched packets without going to userspace</text>
+        <rect x="50" y="185" width="700" height="45" rx="8" fill="#1a1f1a" stroke="var(--success)" stroke-width="2"/>
+        <text x="90" y="210" class="label" style="fill:var(--success); font-size:13px;">Kernel datapath (fast path)</text>
+        <text x="400" y="218" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Megaflow cache &mdash; packets matched without userspace</text>
 
-        <!-- Miss arrow -->
-        <path d="M 400 235 L 400 220 L 370 220" fill="none" stroke="var(--danger)" stroke-width="2" marker-end="url(#arrowRed)"/>
-        <text x="310" y="224" class="label-sm" style="fill:var(--danger);">cache miss ↑</text>
-
-        <!-- Ports at bottom -->
-        <rect x="100" y="310" width="110" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="155" y="330" class="label-sm" text-anchor="middle" style="fill:#fff;">Port: veth-a-br</text>
-        <rect x="250" y="310" width="110" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="305" y="330" class="label-sm" text-anchor="middle" style="fill:#fff;">Port: veth-b-br</text>
-        <rect x="400" y="310" width="110" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="455" y="330" class="label-sm" text-anchor="middle" style="fill:#fff;">Port: dummy0</text>
-        <line x1="155" y1="310" x2="155" y2="290" class="cable"/>
-        <line x1="305" y1="310" x2="305" y2="290" class="cable"/>
-        <line x1="455" y1="310" x2="455" y2="290" class="cable"/>
-
-        <defs>
-          <marker id="arrowRed" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <path d="M0,0 L8,3 L0,6" fill="var(--danger)"/>
-          </marker>
-        </defs>
+        <rect x="100" y="248" width="100" height="26" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
+        <text x="150" y="266" class="label-sm" text-anchor="middle" style="fill:#fff;">Port: veth-a</text>
+        <rect x="240" y="248" width="100" height="26" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
+        <text x="290" y="266" class="label-sm" text-anchor="middle" style="fill:#fff;">Port: veth-b</text>
+        <rect x="380" y="248" width="100" height="26" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
+        <text x="430" y="266" class="label-sm" text-anchor="middle" style="fill:#fff;">Port: NIC</text>
+        <line x1="150" y1="248" x2="150" y2="230" class="cable"/>
+        <line x1="290" y1="248" x2="290" y2="230" class="cable"/>
+        <line x1="430" y1="248" x2="430" y2="230" class="cable"/>
       </svg>
     </div>
-    <div class="takeaway"><code>ofproto/trace</code> simulates a packet through the OpenFlow pipeline — full pipeline debugging without generating traffic. Linux bridge has no equivalent.</div>
-    <span class="lab-ref">Lab guide: Sections 2a–2c</span>
+    <div class="takeaway"><code>ofproto/trace</code> simulates a packet through the OpenFlow pipeline &mdash; full debugging without generating traffic.</div>
+    <span class="lab-ref">Lab: Phase 2</span>
   </section>
 
-  <!-- OVS VLAN ports -->
   <section>
-    <span class="phase-badge p2">Phase 2b</span>
+    <span class="phase-badge p2">Phase 2</span>
     <h2>OVS VLAN Ports</h2>
-    <div class="diagram">
-      <svg viewBox="0 0 800 310" xmlns="http://www.w3.org/2000/svg">
-        <!-- OVS Bridge -->
-        <rect x="60" y="145" width="680" height="50" class="ovs-box"/>
-        <text x="400" y="175" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:16px;">ovsbr0</text>
-
-        <!-- Access port VLAN 100 -->
-        <rect x="70" y="25" width="150" height="80" class="ns-box" style="stroke:var(--vlan100);"/>
-        <text x="145" y="50" class="label" text-anchor="middle" style="font-size:13px;">ovs-a</text>
-        <text x="145" y="70" class="label-sm" text-anchor="middle">10.0.100.1</text>
-        <rect x="95" y="80" width="100" height="18" rx="3" fill="var(--vlan100)" opacity="0.3"/>
-        <text x="145" y="93" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">tag=100</text>
-        <line x1="145" y1="105" x2="145" y2="145" style="stroke:var(--vlan100); stroke-width:2.5;"/>
-
-        <!-- Access port VLAN 200 -->
-        <rect x="260" y="25" width="150" height="80" class="ns-box" style="stroke:var(--vlan200);"/>
-        <text x="335" y="50" class="label" text-anchor="middle" style="font-size:13px;">ovs-b</text>
-        <text x="335" y="70" class="label-sm" text-anchor="middle">10.0.200.1</text>
-        <rect x="285" y="80" width="100" height="18" rx="3" fill="var(--vlan200)" opacity="0.3"/>
-        <text x="335" y="93" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">tag=200</text>
-        <line x1="335" y1="105" x2="335" y2="145" style="stroke:var(--vlan200); stroke-width:2.5;"/>
-
-        <!-- Trunk port VLANs 100+200 -->
-        <rect x="470" y="15" width="190" height="95" class="ns-box" style="stroke:var(--warn);"/>
-        <text x="565" y="38" class="label" text-anchor="middle" style="font-size:14px;">ovs-c (firewall)</text>
-        <text x="565" y="58" class="label-sm" text-anchor="middle">802.1Q sub-interfaces</text>
-        <rect x="490" y="72" width="60" height="22" rx="3" fill="var(--vlan100)" opacity="0.3" stroke="var(--vlan100)" stroke-width="1"/>
-        <text x="520" y="88" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">.100</text>
-        <rect x="560" y="72" width="60" height="22" rx="3" fill="var(--vlan200)" opacity="0.3" stroke="var(--vlan200)" stroke-width="1"/>
-        <text x="590" y="88" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">.200</text>
-        <line x1="565" y1="110" x2="565" y2="145" style="stroke:var(--warn); stroke-width:3;"/>
-        <text x="565" y="132" class="label-sm" text-anchor="middle" style="fill:var(--warn);">trunks=100,200</text>
-
-        <!-- Uplink -->
-        <rect x="660" y="215" width="100" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="710" y="235" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0</text>
-        <line x1="710" y1="215" x2="710" y2="195" class="cable"/>
-
-        <!-- Key: one command to change VLANs -->
-        <rect x="60" y="225" width="550" height="70" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
-        <text x="80" y="250" class="label" style="font-size:13px; fill:var(--accent2);">Day-2: Add VLAN 300 to the firewall</text>
-        <text x="80" y="275" class="label-code" style="font-size:12px;">ovs-vsctl set port veth-ovs-c-br trunks=100,200,300</text>
-        <text x="80" y="292" class="label-sm" style="fill:var(--success);">✓ Atomic, persisted in OVSDB, no guest disruption</text>
-      </svg>
+    <div class="compare-grid three" style="font-size:0.7em; margin-top:0.8em;">
+      <div class="compare-card" style="border-color:var(--vlan100);">
+        <h4 style="color:var(--vlan100);">Access (tag=100)</h4>
+        <p>Normal VM sees untagged frames on VLAN 100</p>
+      </div>
+      <div class="compare-card" style="border-color:var(--vlan200);">
+        <h4 style="color:var(--vlan200);">Access (tag=200)</h4>
+        <p>Normal VM sees untagged frames on VLAN 200</p>
+      </div>
+      <div class="compare-card" style="border-color:var(--warn);">
+        <h4 style="color:var(--warn);">Trunk (trunks=100,200)</h4>
+        <p>Appliance sees tagged 802.1Q frames, creates sub-interfaces</p>
+      </div>
     </div>
-    <span class="lab-ref">Lab guide: Sections 2b, 2c</span>
+    <pre style="font-size:0.6em;"><code>ovs-vsctl set port veth-dmz-br trunks=100,200,300  # Day-2: one atomic command</code></pre>
+    <div class="takeaway">OVS per-port trunk lists gave per-VM VLAN filtering. <strong style="color:var(--danger);">This capability was removed</strong> from OCP 4.17+ when the OVS CNI binary was dropped.</div>
+    <span class="lab-ref">Lab: Section 2b</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p2">Phase 2</span>
+    <h2>What OVS CNI Used to Do &mdash; and Why It's Gone</h2>
+    <div class="compare-grid" style="margin-top:0.8em; font-size:0.7em;">
+      <div class="compare-card bad">
+        <h4 style="color:var(--danger);">OVS CNI (removed OCP 4.17+)</h4>
+        <p><code>"type": "ovs"</code> NADs created ports on OVS bridges.</p>
+        <p style="margin-top:0.3em;">Per-VM <code>"trunk": [{"id": 100}]</code> allowed VLAN filtering.</p>
+        <p style="margin-top:0.5em; color:var(--danger); font-weight:600;">Conflicts with OVN-Kubernetes &mdash; OVN manages all OVS bridges. Binary removed.</p>
+        <pre style="font-size:0.85em; width:100%;"><code>failed to find plugin "ovs" in path [/var/lib/cni/bin]</code></pre>
+      </div>
+      <div class="compare-card good">
+        <h4 style="color:var(--success);">Replacements on OCP 4.17+</h4>
+        <p><strong>Linux-bridge trunk NAD</strong> (<code>"vlan": 0</code>) &mdash; all VLANs, no per-VM filtering.</p>
+        <p style="margin-top:0.3em;"><strong>CUDN Localnet</strong> &mdash; OVN-managed per-VLAN access. NetworkPolicy enforced.</p>
+        <p style="margin-top:0.3em;"><strong>SR-IOV</strong> &mdash; hardware VLAN filtering per VF.</p>
+      </div>
+    </div>
+    <span class="lab-ref">Lab: Section 5c</span>
   </section>
 </section>
 
 <!-- ============================================================ -->
-<!-- PHASE 3: SIDE-BY-SIDE -->
+<!-- SECTION 4: PHASE 3 — COMPARISON -->
 <!-- ============================================================ -->
 <section>
   <section>
@@ -872,1108 +611,445 @@
     </div>
   </section>
 
-  <!-- The 4-guest scenario -->
   <section>
     <span class="phase-badge p3">Phase 3</span>
     <h2>The Test Scenario</h2>
-    <p class="subtitle">Same four guests, same VLAN assignments &mdash; built once with Linux bridge, once with OVS</p>
-    <div class="diagram">
-      <svg viewBox="0 0 800 340" xmlns="http://www.w3.org/2000/svg">
-        <!-- Central switch -->
-        <rect x="100" y="145" width="600" height="50" rx="8" fill="var(--bg-card-alt)" stroke="var(--fg-dim)" stroke-width="2" stroke-dasharray="8 4"/>
-        <text x="400" y="175" class="label" text-anchor="middle" style="fill:var(--fg-dim); font-size:15px;">? &nbsp; Bridge or OVS &nbsp; ?</text>
-
-        <!-- fw-dmz: top-left -->
-        <rect x="40" y="15" width="160" height="100" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <text x="120" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">fw-dmz</text>
-        <text x="120" y="56" class="label-sm" text-anchor="middle">DMZ firewall</text>
-        <rect x="62" y="68" width="46" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
-        <text x="85" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
-        <rect x="114" y="68" width="46" height="18" rx="3" fill="var(--vlan200)" opacity="0.4"/>
-        <text x="137" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
-        <text x="120" y="106" class="label-sm" text-anchor="middle" style="fill:var(--warn);">TRUNK</text>
-        <line x1="120" y1="115" x2="175" y2="145" style="stroke:var(--warn); stroke-width:2.5;"/>
-
-        <!-- fw-internal: top-center-left -->
-        <rect x="240" y="15" width="160" height="100" rx="8" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2"/>
-        <text x="320" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:14px;">fw-internal</text>
-        <text x="320" y="56" class="label-sm" text-anchor="middle">Internal firewall</text>
-        <rect x="262" y="68" width="46" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
-        <text x="285" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">123</text>
-        <rect x="314" y="68" width="46" height="18" rx="3" fill="var(--vlan150)" opacity="0.4"/>
-        <text x="337" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan150);">150</text>
-        <text x="320" y="106" class="label-sm" text-anchor="middle" style="fill:var(--warn);">TRUNK</text>
-        <line x1="320" y1="115" x2="340" y2="145" style="stroke:var(--warn); stroke-width:2.5;"/>
-
-        <!-- monitor: top-center-right -->
-        <rect x="440" y="15" width="175" height="100" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
-        <text x="527" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:14px;">monitor</text>
-        <text x="527" y="56" class="label-sm" text-anchor="middle">IDS / tap (read-only)</text>
-        <rect x="456" y="68" width="32" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
-        <text x="472" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
-        <rect x="494" y="68" width="32" height="18" rx="3" fill="var(--vlan200)" opacity="0.4"/>
-        <text x="510" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
-        <rect x="532" y="68" width="32" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
-        <text x="548" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">123</text>
-        <rect x="570" y="68" width="32" height="18" rx="3" fill="var(--vlan150)" opacity="0.4"/>
-        <text x="586" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan150);">150</text>
-        <text x="527" y="106" class="label-sm" text-anchor="middle" style="fill:var(--accent3);">READ-ONLY TRUNK</text>
-        <line x1="527" y1="115" x2="510" y2="145" style="stroke:var(--accent3); stroke-width:2.5;"/>
-
-        <!-- tenant-a: top-right -->
-        <rect x="655" y="15" width="130" height="100" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
-        <text x="720" y="38" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:14px;">tenant-a</text>
-        <text x="720" y="56" class="label-sm" text-anchor="middle">Tenant workload</text>
-        <rect x="680" y="68" width="80" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
-        <text x="720" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">VLAN 100</text>
-        <text x="720" y="106" class="label-sm" text-anchor="middle" style="fill:var(--accent);">ACCESS</text>
-        <line x1="720" y1="115" x2="660" y2="145" style="stroke:var(--accent); stroke-width:2.5;"/>
-
-        <!-- Isolation annotations between guest pairs -->
-        <!-- fw-dmz and fw-internal have zero VLAN overlap -->
-        <text x="200" y="10" class="label-sm" text-anchor="middle" style="fill:var(--danger);">no shared VLANs</text>
-        <text x="200" y="4" class="label" text-anchor="middle" style="fill:var(--danger); font-size:16px;">✕</text>
-
-        <!-- uplink at bottom -->
-        <rect x="340" y="218" width="120" height="28" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="400" y="237" class="label-sm" text-anchor="middle" style="fill:#fff;">dummy0 (uplink)</text>
-        <line x1="400" y1="195" x2="400" y2="218" class="cable"/>
-
-        <!-- Why this scenario callout -->
-        <rect x="40" y="264" width="720" height="68" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
-        <text x="60" y="286" class="label" style="font-size:13px; fill:var(--accent);">Why these four guests?</text>
-        <text x="60" y="304" class="label-sm">Two firewalls with <tspan style="fill:var(--warn);">disjoint VLAN sets</tspan> (heterogeneous trunks) &nbsp;+ &nbsp;a <tspan style="fill:var(--accent3);">read-only mirror</tspan> &nbsp;+ &nbsp;an <tspan style="fill:var(--accent);">access-port tenant</tspan></text>
-        <text x="60" y="320" class="label-sm">This exercises every VLAN port type and forces per-port filtering — the exact scenario where Bridge and OVS diverge.</text>
-      </svg>
-    </div>
-    <span class="lab-ref">Lab guide: Sections 3a–3d</span>
+    <table style="font-size:0.65em; margin-top:1em;">
+      <tr><th>Guest</th><th>Role</th><th>VLANs</th><th>Persona</th></tr>
+      <tr>
+        <td style="color:var(--danger);">fw-dmz</td>
+        <td>DMZ firewall</td>
+        <td><span class="chip v100">100</span> <span class="chip v200">200</span></td>
+        <td style="color:var(--warn);">Network Appliance</td>
+      </tr>
+      <tr>
+        <td style="color:var(--vlan123);">fw-internal</td>
+        <td>Internal firewall</td>
+        <td><span class="chip v123">123</span> <span class="chip v150">150</span></td>
+        <td style="color:var(--warn);">Network Appliance</td>
+      </tr>
+      <tr>
+        <td style="color:var(--accent3);">monitor</td>
+        <td>IDS / tap</td>
+        <td>All 4</td>
+        <td style="color:var(--warn);">Network Appliance</td>
+      </tr>
+      <tr>
+        <td style="color:var(--vlan100);">tenant-a</td>
+        <td>Tenant workload</td>
+        <td><span class="chip v100">100</span></td>
+        <td style="color:var(--vlan100);">Normal VM</td>
+      </tr>
+    </table>
+    <div class="takeaway">Two firewalls with disjoint VLAN sets + a read-only mirror + an access-port tenant. This forces per-port filtering &mdash; where Bridge and OVS diverge.</div>
+    <span class="lab-ref">Lab: Phase 3</span>
   </section>
 
-  <!-- Day-2 comparison -->
   <section>
     <span class="phase-badge p3">Phase 3</span>
-    <h2>Day-2: Add VLAN 300 to fw-dmz</h2>
+    <h2>Day-2: Add VLAN 300</h2>
     <div class="compare-grid three" style="font-size:0.72em; margin-top:1em;">
       <div class="compare-card bad">
         <h4 style="color:var(--danger);">Per-VLAN Bridge</h4>
-        <div class="steps">
-          <span class="step-num red">1</span> <span>Create br-300</span>
-        </div>
-        <div class="steps">
-          <span class="step-num red">2</span> <span>Create veth pair</span>
-        </div>
-        <div class="steps">
-          <span class="step-num red">3</span> <span>Move into namespace</span>
-        </div>
-        <div class="steps">
-          <span class="step-num red">4</span> <span>Assign IP, bring up</span>
-        </div>
-        <div class="steps">
-          <span class="step-num red">5</span> <span>Reconfigure guest</span>
-        </div>
-        <p style="color:var(--danger); margin-top:0.5em; font-weight:600;">Disruptive. Guest sees a new NIC.</p>
+        <p>5 steps. Guest sees new NIC.</p>
+        <p style="color:var(--danger); font-weight:600;">Disruptive.</p>
       </div>
       <div class="compare-card warn">
         <h4 style="color:var(--warn);">VLAN-Aware Bridge</h4>
-        <div class="steps">
-          <span class="step-num yellow">1</span>
-          <code style="font-size:0.85em;">bridge vlan add vid 300 dev veth-dmz-br</code>
-        </div>
-        <br>
-        <p style="color:var(--warn); font-weight:600;">Live, non-disruptive.</p>
-        <p style="color:var(--danger); font-size:0.85em; margin-top:0.5em;">⚠ Not persisted across reboot.</p>
+        <p><code>bridge vlan add vid 300 dev ...</code></p>
+        <p style="color:var(--warn); font-weight:600;">Live, not persisted.</p>
       </div>
       <div class="compare-card good">
         <h4 style="color:var(--success);">OVS</h4>
-        <div class="steps">
-          <span class="step-num">1</span>
-          <code style="font-size:0.85em;">ovs-vsctl set port ... trunks=100,200,300</code>
-        </div>
-        <br>
-        <p style="color:var(--success); font-weight:600;">Live, non-disruptive.</p>
-        <p style="color:var(--success); font-size:0.85em; margin-top:0.5em;">✓ Persisted in OVSDB.</p>
+        <p><code>ovs-vsctl set port ... trunks=...</code></p>
+        <p style="color:var(--success); font-weight:600;">Live, persisted (OVSDB).</p>
       </div>
     </div>
-    <p style="font-size:0.7em; color:var(--fg-dim); margin-top:0.8em;">Guest-side: all three need <code>ip link add ... type vlan id 300</code> inside the namespace — but only the per-bridge model forces a new host-side NIC.</p>
-    <span class="lab-ref">Lab guide: Section 3e, Exercise 2</span>
+    <span class="lab-ref">Lab: Section 3f</span>
   </section>
 
-  <!-- Read-only monitor comparison -->
   <section>
     <span class="phase-badge p3">Phase 3</span>
-    <h2>Read-Only Monitor Port</h2>
-    <div class="compare-grid" style="margin-top:0.8em;">
-      <div class="compare-card warn">
-        <h4 style="color:var(--warn);">Linux Bridge</h4>
-        <p style="font-size:0.7em; color:var(--fg-dim); margin-bottom:0.5em;">Requires a separate subsystem (nftables):</p>
-        <pre><code>nft add table bridge filter
-nft add chain bridge filter forward \
-  '{ type filter hook forward priority 0; }'
-nft add rule bridge filter forward \
-  ibrname "veth-mon-br" drop</code></pre>
-        <p style="font-size:0.65em; color:var(--fg-dim); margin-top:0.5em;">
-          Bridge has no concept of port direction.<br>
-          SPAN/mirror: <code>tc mirred</code> — fragile, separate subsystem.
-        </p>
-      </div>
-      <div class="compare-card good">
-        <h4 style="color:var(--success);">OVS</h4>
-        <p style="font-size:0.7em; color:var(--fg-dim); margin-bottom:0.5em;">Same flow table as forwarding — one command:</p>
-        <pre><code># Drop ingress from monitor
-ovs-ofctl add-flow ovsbr0 \
-  "priority=100,in_port=veth-mon-br,actions=drop"
-
-# Or: proper SPAN mirror
-ovs-vsctl -- --id=@p get port veth-mon-br \
-  -- --id=@m create mirror name=all-vlans \
-     select-vlan=100,123,150,200 \
-     output-port=@p</code></pre>
-        <p style="font-size:0.65em; color:var(--success); margin-top:0.5em;">
-          Native, declarative, verifiable with <code>ofproto/trace</code>.
-        </p>
-      </div>
-    </div>
-    <span class="lab-ref">Lab guide: Sections 3c, 3d</span>
-  </section>
-
-  <!-- Proving isolation -->
-  <section>
-    <span class="phase-badge p3">Phase 3</span>
-    <h2>Proving VLAN Isolation</h2>
-    <p class="subtitle">Can fw-dmz (VLANs 100,200) reach fw-internal (VLANs 123,150)?</p>
-    <div class="compare-grid" style="margin-top:1em;">
-      <div class="compare-card warn">
-        <h4 style="color:var(--warn);">Linux Bridge</h4>
-        <pre><code># Run tcpdump and look for absence of traffic
-ip netns exec fw-internal tcpdump -i veth-int &
-ip netns exec fw-dmz ping -c 3 10.0.123.1
-# tcpdump shows nothing — but…</code></pre>
-        <p style="font-size:0.75em; color:var(--danger); margin-top:0.5em; font-weight:600;">
-          "Absence of evidence is not evidence of absence"
-        </p>
-      </div>
-      <div class="compare-card good">
-        <h4 style="color:var(--success);">OVS</h4>
-        <pre><code># Prove without generating traffic
-ovs-appctl ofproto/trace ovsbr0 \
-  "in_port=veth-dmz-br,dl_vlan=123,\
-   dl_src=aa:bb:cc:dd:ee:01,\
-   dl_dst=ff:ff:ff:ff:ff:ff"
-
-# Output: "Datapath actions: drop"</code></pre>
-        <p style="font-size:0.75em; color:var(--success); margin-top:0.5em; font-weight:600;">
-          Deterministic proof. Full pipeline trace.
-        </p>
-      </div>
-    </div>
-    <div class="takeaway"><code>ofproto/trace</code> lets you prove security properties without generating traffic — critical for compliance and auditing.</div>
-    <span class="lab-ref">Lab guide: Section 3e, Exercise 3</span>
-  </section>
-
-  <!-- Comparison matrix -->
-  <section>
-    <span class="phase-badge p3">Phase 3</span>
-    <h2>Full Comparison Matrix</h2>
+    <h2>Host-Level Comparison Matrix</h2>
     <table style="font-size:0.55em;">
       <tr>
         <th>Dimension</th>
-        <th style="color:var(--danger);">Bridge (per-VLAN)</th>
         <th style="color:var(--warn);">Bridge (VLAN-aware)</th>
         <th style="color:var(--success);">OVS</th>
       </tr>
-      <tr>
-        <td>Guest NICs for 4-VLAN trunk</td>
-        <td>4</td>
-        <td>1</td>
-        <td>1</td>
-      </tr>
-      <tr>
-        <td>Firewall appliance compat</td>
-        <td style="color:var(--danger);">Poor (discrete NICs)</td>
-        <td style="color:var(--success);">Good (802.1Q trunk)</td>
-        <td style="color:var(--success);">Good (802.1Q trunk)</td>
-      </tr>
-      <tr>
-        <td>Add VLAN to one guest</td>
-        <td style="color:var(--danger);">New bridge + NIC</td>
-        <td style="color:var(--warn);">Live, not persisted</td>
-        <td style="color:var(--success);">Live, persisted (OVSDB)</td>
-      </tr>
-      <tr>
-        <td>Prove isolation w/o traffic</td>
-        <td style="color:var(--danger);">✕</td>
-        <td style="color:var(--danger);">✕</td>
-        <td style="color:var(--success);">ofproto/trace</td>
-      </tr>
-      <tr>
-        <td>SPAN / Mirror</td>
-        <td style="color:var(--danger);">✕</td>
-        <td style="color:var(--warn);">tc mirred</td>
-        <td style="color:var(--success);">Native mirror</td>
-      </tr>
-      <tr>
-        <td>QoS / Rate limit</td>
-        <td>tc</td>
-        <td>tc</td>
-        <td style="color:var(--success);">Native per-port</td>
-      </tr>
-      <tr>
-        <td>Central management</td>
-        <td style="color:var(--danger);">None</td>
-        <td style="color:var(--danger);">None</td>
-        <td style="color:var(--success);">OVN northbound DB</td>
-      </tr>
-      <tr>
-        <td>Scale (100s of VMs)</td>
-        <td style="color:var(--danger);">Bridge sprawl</td>
-        <td style="color:var(--warn);">Reasonable</td>
-        <td style="color:var(--success);">Best — flow caching</td>
-      </tr>
+      <tr><td>Firewall appliance compat</td><td style="color:var(--success);">Good (802.1Q trunk)</td><td style="color:var(--success);">Good (802.1Q trunk)</td></tr>
+      <tr><td>Prove isolation w/o traffic</td><td style="color:var(--danger);">No</td><td style="color:var(--success);">ofproto/trace</td></tr>
+      <tr><td>SPAN / Mirror</td><td style="color:var(--warn);">tc mirred</td><td style="color:var(--success);">Native mirror</td></tr>
+      <tr><td>Persistence</td><td style="color:var(--danger);">Requires scripting</td><td style="color:var(--success);">OVSDB</td></tr>
+      <tr><td>Median latency</td><td>Baseline</td><td>+2&ndash;5 &micro;s</td></tr>
+      <tr><td>P99.9 latency</td><td>Baseline</td><td style="color:var(--warn);">+50&ndash;150 &micro;s (misses)</td></tr>
+      <tr><td>Memory</td><td>Kernel-only</td><td style="color:var(--warn);">+50&ndash;200 MB userspace</td></tr>
     </table>
-    <span class="lab-ref">Lab guide: Comparison Matrix</span>
-  </section>
-
-  <!-- 3f: Performance -->
-  <section>
-    <span class="phase-badge p3">Phase 3f</span>
-    <h2>Performance: What the Numbers Say</h2>
-    <p class="subtitle">Datapath architecture drives the differences</p>
-    <div class="compare-grid" style="margin-top:0.5em; font-size:0.68em;">
-      <div class="compare-card" style="padding:0.8em;">
-        <h4 style="color:var(--warn);">VLAN-Aware Bridge</h4>
-        <div class="diagram" style="margin:0.3em 0;">
-          <svg viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="280" height="55" rx="6" fill="#1a1f1a" stroke="var(--success)" stroke-width="2"/>
-            <text x="150" y="32" class="label" text-anchor="middle" style="fill:var(--success); font-size:13px;">Kernel only</text>
-            <text x="150" y="52" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">VLAN: O(1) bitmap &middot; FDB: hash table</text>
-          </svg>
-        </div>
-        <p>Pure kernel fast path. VLAN classification is a bitmap &mdash; zero per-packet cost regardless of VLAN count. No userspace component.</p>
-      </div>
-      <div class="compare-card" style="padding:0.8em;">
-        <h4 style="color:var(--accent2);">OVS</h4>
-        <div class="diagram" style="margin:0.3em 0;">
-          <svg viewBox="0 0 300 80" xmlns="http://www.w3.org/2000/svg">
-            <rect x="10" y="10" width="280" height="25" rx="4" fill="#29201a" stroke="var(--accent2)" stroke-width="1.5"/>
-            <text x="150" y="27" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">Slow path: ovs-vswitchd (10–50 µs upcall)</text>
-            <rect x="10" y="42" width="280" height="25" rx="4" fill="#1a1f1a" stroke="var(--success)" stroke-width="1.5"/>
-            <text x="150" y="59" class="label-sm" text-anchor="middle" style="fill:var(--success);">Fast path: kernel megaflow cache</text>
-          </svg>
-        </div>
-        <p>Two-tier. Cached flows are fast; cache misses trigger userspace upcall. <strong style="color:var(--accent2);">Latency is bimodal.</strong></p>
-      </div>
-    </div>
-    <span class="lab-ref">Lab guide: Section 3f</span>
-  </section>
-
-  <section>
-    <span class="phase-badge p3">Phase 3f</span>
-    <h2>Performance Results</h2>
-    <table style="font-size:0.58em; margin-top:0.5em;">
-      <tr>
-        <th>Metric</th>
-        <th style="color:var(--warn);">VLAN-aware bridge</th>
-        <th style="color:var(--accent2);">OVS (cached)</th>
-        <th style="color:var(--danger);">OVS (miss)</th>
-      </tr>
-      <tr>
-        <td>Median RTT</td>
-        <td>~15–25 µs</td>
-        <td>~18–30 µs</td>
-        <td style="color:var(--danger);">~60–150 µs</td>
-      </tr>
-      <tr>
-        <td>P99 RTT</td>
-        <td>~30–50 µs</td>
-        <td>~40–80 µs</td>
-        <td style="color:var(--danger);">~200–500 µs</td>
-      </tr>
-      <tr>
-        <td>P99.9 RTT</td>
-        <td>~50–80 µs</td>
-        <td style="color:var(--warn);">~80–200 µs</td>
-        <td style="color:var(--danger);">~500+ µs</td>
-      </tr>
-    </table>
-    <table style="font-size:0.58em; margin-top:0.6em;">
-      <tr>
-        <th>Dimension</th>
-        <th style="color:var(--warn);">VLAN-aware bridge</th>
-        <th style="color:var(--accent2);">OVS</th>
-      </tr>
-      <tr>
-        <td>Throughput (1500 B frames)</td>
-        <td>Baseline</td>
-        <td style="color:var(--success);">~same (within noise)</td>
-      </tr>
-      <tr>
-        <td>Small-packet UDP PPS (64 B)</td>
-        <td>Baseline</td>
-        <td style="color:var(--warn);">5–15% lower</td>
-      </tr>
-      <tr>
-        <td>CPU per Gbps</td>
-        <td>Lower</td>
-        <td style="color:var(--warn);">~10–20% higher</td>
-      </tr>
-      <tr>
-        <td>Memory footprint</td>
-        <td>Kernel-only, minimal</td>
-        <td style="color:var(--warn);">+50–200 MB userspace</td>
-      </tr>
-      <tr>
-        <td>VLAN scaling (100+)</td>
-        <td style="color:var(--success);">Zero cost (bitmap)</td>
-        <td>More megaflow entries</td>
-      </tr>
-    </table>
-    <span class="lab-ref">Lab guide: Section 3f</span>
-  </section>
-
-  <section>
-    <span class="phase-badge p3">Phase 3f</span>
-    <h2>Performance → Decision Impact</h2>
-    <div class="punchline" style="margin-top:0.8em; font-size:0.8em;">
-      At typical firewall VM scale (&lt; 50 VMs, &lt; 100 VLANs), throughput and latency differences are <strong style="color:var(--success);">negligible</strong>. Choose based on operability, not performance.
-    </div>
-    <div style="margin-top:1em; font-size:0.72em;">
-      <table>
-        <tr>
-          <th>Workload profile</th>
-          <th>Performance says&hellip;</th>
-        </tr>
-        <tr>
-          <td>Firewall VM, typical enterprise traffic</td>
-          <td style="color:var(--success);">Gap is noise. Pick OVS for operability.</td>
-        </tr>
-        <tr>
-          <td>High PPS, small packets (telco, NFV)</td>
-          <td style="color:var(--warn);">Bridge wins 5–15% PPS. Consider SR-IOV.</td>
-        </tr>
-        <tr>
-          <td>Latency-sensitive (finance, HFT)</td>
-          <td style="color:var(--danger);">P99.9 tail matters. Bridge or SR-IOV.</td>
-        </tr>
-        <tr>
-          <td>100+ VLANs, 1000+ flows</td>
-          <td style="color:var(--warn);">Monitor OVS megaflow cache &amp; upcall rate.</td>
-        </tr>
-        <tr>
-          <td>Minimal resource budget</td>
-          <td style="color:var(--warn);">Bridge: zero userspace daemons, kernel slab only.</td>
-        </tr>
-      </table>
-    </div>
-    <div class="takeaway" style="margin-top:0.6em; font-size:0.72em;">
-      <strong>Median is close, tails diverge.</strong> OVS latency is bimodal &mdash; cached flows are fast, megaflow misses produce spikes. The performance gap only becomes a factor at very high PPS or when P99.9 latency is a hard requirement.
-    </div>
-    <span class="lab-ref">Lab guide: Section 3f</span>
+    <div class="takeaway">At typical VM scale, performance differences are negligible. Choose based on operability.</div>
+    <span class="lab-ref">Lab: Sections 3d, 3e</span>
   </section>
 </section>
 
 <!-- ============================================================ -->
-<!-- PHASE 4: OVN -->
+<!-- SECTION 5: PHASE 4 — OVN -->
 <!-- ============================================================ -->
 <section>
   <section>
     <div class="phase-title">
       <span class="phase-badge p4">Phase 4</span>
-      <h2>OVN — Control Plane for OVS</h2>
+      <h2>OVN &mdash; Control Plane for OVS</h2>
       <p class="subtitle">Logical networking on top of the OVS datapath</p>
     </div>
   </section>
 
-  <!-- OVN logical-to-physical -->
   <section>
     <span class="phase-badge p4">Phase 4</span>
-    <h2>Logical ↔ Physical Mapping</h2>
-    <div class="diagram">
-      <svg viewBox="0 0 800 400" xmlns="http://www.w3.org/2000/svg">
-        <!-- Logical layer -->
-        <rect x="40" y="10" width="720" height="165" rx="10" fill="rgba(94,64,190,0.06)" stroke="var(--vlan150)" stroke-width="1.5" stroke-dasharray="8 4"/>
-        <text x="70" y="35" class="label" style="fill:var(--vlan150); font-size:14px;">Logical (OVN Northbound DB)</text>
-
-        <!-- Logical switch -->
-        <rect x="200" y="50" width="400" height="45" rx="6" fill="#1f1a1f" stroke="var(--vlan150)" stroke-width="2"/>
-        <text x="400" y="78" class="label" text-anchor="middle" style="fill:var(--vlan150);">Logical Switch: tenant1</text>
-
-        <!-- Logical ports -->
-        <rect x="220" y="105" width="100" height="35" rx="4" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <text x="270" y="127" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">port1</text>
-        <line x1="270" y1="95" x2="270" y2="105" style="stroke:var(--vlan150); stroke-width:1.5;"/>
-
-        <rect x="350" y="105" width="100" height="35" rx="4" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="1.5"/>
-        <text x="400" y="127" class="label-sm" text-anchor="middle" style="fill:var(--vlan200);">port2</text>
-        <line x1="400" y1="95" x2="400" y2="105" style="stroke:var(--vlan150); stroke-width:1.5;"/>
-
-        <!-- Logical router -->
-        <rect x="490" y="105" width="120" height="35" rx="4" fill="#1a1f1a" stroke="var(--success)" stroke-width="1.5"/>
-        <text x="550" y="127" class="label-sm" text-anchor="middle" style="fill:var(--success);">router1</text>
-        <line x1="550" y1="95" x2="550" y2="105" style="stroke:var(--vlan150); stroke-width:1.5;"/>
-
-        <!-- Dashed mapping lines -->
-        <line x1="270" y1="140" x2="180" y2="225" style="stroke:var(--fg-dim); stroke-width:1.5; stroke-dasharray:4 4;"/>
-        <line x1="400" y1="140" x2="540" y2="225" style="stroke:var(--fg-dim); stroke-width:1.5; stroke-dasharray:4 4;"/>
-
-        <!-- Physical layer -->
-        <rect x="40" y="195" width="720" height="190" rx="10" fill="rgba(238,0,0,0.04)" stroke="var(--accent)" stroke-width="1.5" stroke-dasharray="8 4"/>
-        <text x="70" y="220" class="label" style="fill:var(--accent); font-size:14px;">Physical (OVS on each node)</text>
-
-        <!-- Node 1 -->
-        <rect x="70" y="235" width="280" height="130" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1.5"/>
-        <text x="210" y="258" class="label" text-anchor="middle" style="font-size:13px;">Node 1</text>
-        <rect x="100" y="268" width="220" height="35" class="ovs-box" style="stroke-width:1.5;"/>
-        <text x="210" y="290" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">br-int (OVS)</text>
-        <!-- Pod -->
-        <rect x="120" y="315" width="80" height="28" rx="4" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1"/>
-        <text x="160" y="334" class="label-sm" text-anchor="middle" style="fill:var(--vlan100); font-size:10px;">Pod (port1)</text>
-        <line x1="160" y1="315" x2="160" y2="303" style="stroke:var(--vlan100); stroke-width:1.5;"/>
-
-        <!-- Node 2 -->
-        <rect x="400" y="235" width="320" height="130" rx="8" fill="var(--bg-card)" stroke="#383838" stroke-width="1.5"/>
-        <text x="560" y="258" class="label" text-anchor="middle" style="font-size:13px;">Node 2</text>
-        <rect x="430" y="268" width="260" height="35" class="ovs-box" style="stroke-width:1.5;"/>
-        <text x="560" y="290" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">br-int (OVS)</text>
-        <rect x="470" y="315" width="80" height="28" rx="4" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="1"/>
-        <text x="510" y="334" class="label-sm" text-anchor="middle" style="fill:var(--vlan200); font-size:10px;">Pod (port2)</text>
-        <line x1="510" y1="315" x2="510" y2="303" style="stroke:var(--vlan200); stroke-width:1.5;"/>
-
-        <!-- Geneve tunnel between nodes -->
-        <line x1="320" y1="285" x2="430" y2="285" style="stroke:var(--accent); stroke-width:2; stroke-dasharray:6 3;"/>
-        <text x="375" y="278" class="label-sm" text-anchor="middle" style="fill:var(--accent); font-size:10px;">Geneve tunnel</text>
-      </svg>
-    </div>
-    <div class="takeaway">OVN compiles logical switches, routers, and ACLs into OVS flows on each node. <code>ovn-nbctl</code> = intent; <code>ovs-ofctl</code> = reality.</div>
-    <span class="lab-ref">Lab guide: Sections 4a–4c</span>
-  </section>
-
-  <!-- OVN to K8s concept mapping -->
-  <section>
-    <span class="phase-badge p4">Phase 4c</span>
-    <h2>OVN → Kubernetes Mapping</h2>
+    <h2>OVN &rarr; Kubernetes Mapping</h2>
     <table style="font-size:0.7em; margin-top:1em;">
       <tr><th>OVN Concept</th><th>Kubernetes Equivalent</th></tr>
-      <tr>
-        <td>Logical Switch</td>
-        <td>Namespace network / UDN L2 segment</td>
-      </tr>
-      <tr>
-        <td>Logical Router</td>
-        <td>UDN L3 topology / cluster default gateway</td>
-      </tr>
-      <tr>
-        <td>Logical Switch Port</td>
-        <td>Pod network interface</td>
-      </tr>
-      <tr>
-        <td>ACLs</td>
-        <td>NetworkPolicy / AdminNetworkPolicy</td>
-      </tr>
-      <tr>
-        <td style="color:var(--warn);">Localnet port</td>
-        <td style="color:var(--warn);">Physical network attachment (VLAN trunk to node NIC)</td>
-      </tr>
+      <tr><td>Logical Switch</td><td>Namespace network / UDN L2 segment</td></tr>
+      <tr><td>Logical Router</td><td>UDN L3 topology / cluster gateway</td></tr>
+      <tr><td>Logical Switch Port</td><td>Pod network interface</td></tr>
+      <tr><td>ACLs</td><td>NetworkPolicy / AdminNetworkPolicy</td></tr>
+      <tr><td style="color:var(--warn);">Localnet port</td><td style="color:var(--warn);">CUDN Localnet &rarr; physical VLAN via OVS bridge-mapping</td></tr>
     </table>
-    <div class="takeaway" style="margin-top:1em;">The localnet port is the bridge between OVN's overlay and the physical world — the same mechanism UDN uses to expose physical VLANs to KubeVirt VMs.</div>
-    <span class="lab-ref">Lab guide: Section 4c</span>
+    <div class="takeaway">The localnet port is the bridge between OVN's overlay and the physical world &mdash; the mechanism CUDN Localnet uses to expose VLANs to VMs.</div>
+    <span class="lab-ref">Lab: Phase 4</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p4">Phase 4</span>
+    <h2>OVN Manages the OVS Bridge Now</h2>
+    <div class="punchline" style="margin-top:1em;">
+      On OCP 4.17+, OVN-Kubernetes exclusively manages all OVS bridges via the southbound database. You do <strong>not</strong> create ports manually with <code>ovs-vsctl add-port</code>, and you do <strong>not</strong> use the <code>ovs</code> CNI plugin.
+    </div>
+    <div style="font-size:0.7em; margin-top:1em;">
+      <p><strong>Phase 2&ndash;3 (host-level OVS):</strong> You manipulated OVS directly &mdash; <code>ovs-vsctl</code>, flow tables, trunk lists.</p>
+      <p><strong>Phase 5 (OCP):</strong> OVN compiles Kubernetes resources (CUDN, UDN, NetworkPolicy) into OVS flows automatically. Your debug tools still work: <code>ofproto/trace</code>, <code>ovn-trace</code>.</p>
+    </div>
+    <span class="lab-ref">Lab: Errata</span>
   </section>
 </section>
 
 <!-- ============================================================ -->
-<!-- PHASE 5: OPENSHIFT + KUBEVIRT -->
+<!-- SECTION 6: PHASE 5 — OCP DECISION (THE CORE) -->
 <!-- ============================================================ -->
 <section>
   <section>
     <div class="phase-title">
       <span class="phase-badge p5">Phase 5</span>
-      <h2>OpenShift &amp; KubeVirt</h2>
-      <p class="subtitle">Putting it all together on OCP 4.21</p>
+      <h2>OpenShift 4.21 &mdash; The Decision in Practice</h2>
+      <p class="subtitle">What to use, when, and the constraints that matter</p>
     </div>
   </section>
 
-  <!-- KubeVirt networking stack -->
   <section>
     <span class="phase-badge p5">Phase 5</span>
-    <h2>KubeVirt VM Networking Stack</h2>
-    <p class="subtitle">Every layer a packet traverses from VM to wire</p>
+    <h2>Master Constraint &amp; Capability Table</h2>
+    <table style="font-size:0.42em;">
+      <tr>
+        <th>Dimension</th>
+        <th style="color:var(--warn);">Linux-bridge NAD</th>
+        <th style="color:var(--vlan123);">CUDN Localnet</th>
+        <th style="color:#b090e0;">UDN Layer2</th>
+        <th>SR-IOV</th>
+      </tr>
+      <tr><td>Topology</td><td>Physical (bridged)</td><td>Physical (OVN-managed OVS)</td><td>Overlay (Geneve)</td><td>Physical (VF passthrough)</td></tr>
+      <tr><td>Needs physical NIC</td><td>Yes</td><td>Yes</td><td>No</td><td>Yes (SR-IOV NIC)</td></tr>
+      <tr><td>VLAN support</td><td>Access or Trunk</td><td>Access only</td><td>No</td><td>Per-VF VLAN</td></tr>
+      <tr><td>802.1Q trunk to guest</td><td style="color:var(--success);"><strong>Yes</strong></td><td style="color:var(--danger);">No</td><td style="color:var(--danger);">No</td><td style="color:var(--success);">Yes (VF trunk)</td></tr>
+      <tr><td>NetworkPolicy</td><td style="color:var(--danger);">No</td><td style="color:var(--success);"><strong>Yes</strong></td><td style="color:var(--success);"><strong>Yes</strong></td><td style="color:var(--danger);">No</td></tr>
+      <tr><td>Live migration</td><td style="color:var(--success);">Yes</td><td style="color:var(--success);">Yes</td><td style="color:var(--success);">Yes (persistent IPs)</td><td style="color:var(--danger);"><strong>No</strong></td></tr>
+      <tr><td>Hot-plug</td><td style="color:var(--success);">Yes</td><td style="color:var(--success);">Yes</td><td style="color:var(--success);">Yes</td><td>Yes (no unplug)</td></tr>
+      <tr><td>VM IPAM</td><td>cloud-init</td><td>Disabled (cloud-init)</td><td>OVN-managed</td><td>Manual</td></tr>
+      <tr><td>Performance</td><td>Good (kernel bridge)</td><td>Good (OVS flow cache)</td><td>Moderate (Geneve encap)</td><td><strong>Best</strong></td></tr>
+    </table>
+    <span class="lab-ref">Lab: Section 5c</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>Linux-bridge NAD &mdash; When and How</h2>
+    <p class="subtitle">Simplest physical underlay access. No NetworkPolicy. Good for appliances and simple VMs.</p>
+    <div class="compare-grid" style="margin-top:0.8em; font-size:0.68em;">
+      <div class="compare-card" style="border-color:var(--vlan100);">
+        <h4 style="color:var(--vlan100);">Access NAD (<code>"vlan": 100</code>)</h4>
+        <p>Normal VM gets an untagged NIC on VLAN 100.</p>
+        <p style="margin-top:0.3em; color:var(--fg-dim);">Bridge strips/adds VLAN tag automatically.</p>
+      </div>
+      <div class="compare-card" style="border-color:var(--warn);">
+        <h4 style="color:var(--warn);">Trunk NAD (<code>"vlan": 0</code>)</h4>
+        <p>Appliance gets 802.1Q tagged frames on all VLANs.</p>
+        <p style="margin-top:0.3em; color:var(--danger);">No per-VM VLAN filtering &mdash; all VMs see all VLANs.</p>
+      </div>
+    </div>
+    <div class="constraint-box">No IPAM for VMs on linux-bridge NADs. Use cloud-init.</div>
+    <div class="constraint-box">Cannot attach to the default machine network directly.</div>
+    <span class="lab-ref">Lab: Section 5c</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>CUDN Localnet &mdash; When and How</h2>
+    <p class="subtitle">OVN-managed physical underlay. NetworkPolicy. Per-VLAN isolation.</p>
+    <div style="font-size:0.68em; margin-top:0.8em;">
+      <p><strong>API:</strong> <code>ClusterUserDefinedNetwork</code> (cluster-scoped). <strong>Not</strong> <code>UserDefinedNetwork</code>.</p>
+      <p style="margin-top:0.3em;"><strong>VLAN:</strong> Access-mode only &mdash; <code>vlan: {mode: Access, access: {id: N}}</code>. No 802.1Q trunk.</p>
+      <p style="margin-top:0.3em;"><strong>Needs:</strong> OVS bridge (<code>ovs-br1</code>) + OVN bridge-mapping via NMState NNCP.</p>
+      <p style="margin-top:0.3em;"><strong>Scope:</strong> <code>namespaceSelector</code> controls which namespaces consume the network.</p>
+    </div>
+    <div class="constraint-box">CUDN Localnet IPAM for VMs must be <code>Disabled</code>.</div>
+    <div class="constraint-box">MultiNetworkPolicy on secondaries: <code>ipBlock</code> only &mdash; pod/namespace selectors not supported.</div>
+    <span class="lab-ref">Lab: Section 5c</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>UDN Layer2 &mdash; VPC-like Tenant Isolation</h2>
+    <p class="subtitle">No physical NIC needed. Persistent IPs. Live migration. Built-in NetworkPolicy.</p>
+    <div style="font-size:0.68em; margin-top:0.8em;">
+      <p><strong>API:</strong> <code>UserDefinedNetwork</code> (namespace-scoped) or <code>ClusterUserDefinedNetwork</code></p>
+      <p style="margin-top:0.3em;"><strong>Role:</strong> Primary (replaces default pod network) or Secondary</p>
+      <p style="margin-top:0.3em;"><strong>Topology:</strong> Geneve overlay &mdash; no VLAN config, no physical NIC</p>
+    </div>
+    <div class="constraint-box">Primary UDN requires <code>k8s.ovn.org/primary-user-defined-network</code> namespace label <strong>at creation</strong>. Cannot be added later.</div>
+    <div class="constraint-box">Primary UDN VMs lose <code>virtctl ssh</code>, <code>oc port-forward</code>, and headless services.</div>
+    <span class="lab-ref">Lab: Section 5c</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>SR-IOV &mdash; Max Performance, No Migration</h2>
+    <p class="subtitle">Hardware VF passthrough. Per-VF VLAN filtering replaces removed OVS CNI trunks.</p>
+    <div style="font-size:0.68em; margin-top:0.8em;">
+      <p><strong>Performance:</strong> Best &mdash; bypasses kernel and OVS entirely.</p>
+      <p style="margin-top:0.3em;"><strong>VLAN:</strong> Per-VF hardware filtering &mdash; true trunk with allow-list per VM.</p>
+      <p style="margin-top:0.3em;"><strong>Use case:</strong> Telco/NFV, DPDK workloads, or when per-VM trunk filtering is required.</p>
+    </div>
+    <div class="constraint-box">No live migration (uses <code>vfio-pci</code> &mdash; PCI passthrough).</div>
+    <div class="constraint-box">No hot-unplug for SR-IOV interfaces.</div>
+    <span class="lab-ref">Lab: Section 5c</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>Per-Persona Recommendations</h2>
+    <div class="compare-grid three" style="margin-top:0.6em; font-size:0.62em;">
+      <div class="compare-card" style="border-color:var(--vlan100);">
+        <h4 style="color:var(--vlan100);">Normal VM</h4>
+        <p><strong>Default:</strong> CUDN Localnet (OVN policy)</p>
+        <p style="margin-top:0.2em;"><strong>Simple:</strong> Linux-bridge NAD (no policy needed)</p>
+        <p style="margin-top:0.2em;"><strong>Best perf:</strong> SR-IOV (no migration)</p>
+      </div>
+      <div class="compare-card" style="border-color:var(--vlan200);">
+        <h4 style="color:var(--vlan200);">VPC Tenant</h4>
+        <p><strong>Default:</strong> Primary UDN Layer2 (persistent IPs)</p>
+        <p style="margin-top:0.2em;"><strong>Physical access:</strong> + CUDN Localnet per VLAN</p>
+        <p style="margin-top:0.2em;"><strong>Segmentation:</strong> NetworkPolicy on CUDN/UDN</p>
+      </div>
+      <div class="compare-card" style="border-color:var(--warn);">
+        <h4 style="color:var(--warn);">Network Appliance</h4>
+        <p><strong>Default:</strong> Linux-bridge trunk (<code>"vlan": 0</code>)</p>
+        <p style="margin-top:0.2em;"><strong>Multi-NIC:</strong> CUDN Localnet per VLAN</p>
+        <p style="margin-top:0.2em;"><strong>HW filter:</strong> SR-IOV (replaces OVS CNI)</p>
+      </div>
+    </div>
+    <span class="lab-ref">Lab: Section 5d</span>
+  </section>
+
+  <section>
+    <span class="phase-badge p5">Phase 5</span>
+    <h2>The Two-Bridge Hybrid Model</h2>
     <div class="diagram">
-      <svg viewBox="0 0 800 420" xmlns="http://www.w3.org/2000/svg">
-        <!-- VM -->
-        <rect x="200" y="10" width="400" height="50" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <text x="400" y="32" class="label" text-anchor="middle" style="fill:var(--danger);">KubeVirt VM (fw-dmz)</text>
-        <text x="400" y="50" class="label-sm" text-anchor="middle">eth1.100, eth1.200 — VLAN sub-interfaces</text>
+      <svg viewBox="0 0 800 320" xmlns="http://www.w3.org/2000/svg">
+        <rect x="20" y="8" width="760" height="305" rx="12" fill="none" stroke="var(--fg-dim)" stroke-width="1" stroke-dasharray="6 3"/>
+        <text x="400" y="28" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
 
-        <line x1="400" y1="60" x2="400" y2="80" style="stroke:var(--fg-dim); stroke-width:2;"/>
-        <text x="490" y="74" class="label-sm" style="fill:var(--fg-dim);">virtio NIC</text>
+        <rect x="40" y="42" width="200" height="110" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
+        <text x="140" y="65" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz</text>
+        <text x="140" y="82" class="label-sm" text-anchor="middle">eth1: 802.1Q trunk</text>
+        <text x="140" y="100" class="label-code" text-anchor="middle" style="font-size:10px;">bridge CNI trunk NAD</text>
+        <text x="140" y="138" class="label-sm" text-anchor="middle" style="fill:var(--danger); font-size:9px;">NIC 2 / br-secondary</text>
 
-        <!-- tap device -->
-        <rect x="250" y="80" width="300" height="36" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="400" y="103" class="label-sm" text-anchor="middle" style="fill:#fff;">tap device (QEMU process)</text>
+        <rect x="290" y="42" width="200" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
+        <text x="390" y="65" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">app-vm (tenant-a)</text>
+        <text x="390" y="82" class="label-sm" text-anchor="middle">eth1: VLAN 100 untagged</text>
+        <text x="390" y="100" class="label-code" text-anchor="middle" style="font-size:10px;">CUDN Localnet phys-vlan100</text>
+        <text x="390" y="138" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NIC 3 / ovs-br1 + NetworkPolicy</text>
 
-        <line x1="400" y1="116" x2="400" y2="136" style="stroke:var(--fg-dim); stroke-width:2;"/>
-        <text x="490" y="130" class="label-sm" style="fill:var(--fg-dim);">veth pair</text>
+        <rect x="540" y="42" width="200" height="110" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
+        <text x="640" y="65" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">db-vm (tenant-b)</text>
+        <text x="640" y="82" class="label-sm" text-anchor="middle">eth1: VLAN 200 untagged</text>
+        <text x="640" y="100" class="label-code" text-anchor="middle" style="font-size:10px;">CUDN Localnet phys-vlan200</text>
+        <text x="640" y="138" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NIC 3 / ovs-br1 + NetworkPolicy</text>
 
-        <!-- Pod namespace boundary -->
-        <rect x="150" y="136" width="500" height="40" rx="6" fill="rgba(238,0,0,0.06)" stroke="var(--accent)" stroke-width="2" stroke-dasharray="6 3"/>
-        <text x="400" y="161" class="label-sm" text-anchor="middle" style="fill:var(--accent);">Pod network namespace boundary</text>
+        <line x1="140" y1="152" x2="140" y2="190" style="stroke:var(--accent2); stroke-width:2;"/>
+        <line x1="390" y1="152" x2="390" y2="190" style="stroke:var(--vlan100); stroke-width:2;"/>
+        <line x1="640" y1="152" x2="640" y2="190" style="stroke:var(--vlan200); stroke-width:2;"/>
 
-        <line x1="400" y1="176" x2="400" y2="196" style="stroke:var(--fg-dim); stroke-width:2;"/>
+        <rect x="40" y="190" width="200" height="35" class="bridge-box" style="stroke-width:2;"/>
+        <text x="140" y="212" class="label-sm" text-anchor="middle" style="fill:var(--warn);">br-secondary</text>
 
-        <!-- Bridge / OVS -->
-        <rect x="140" y="196" width="520" height="48" rx="8" fill="#1f1f1f" stroke="var(--accent2)" stroke-width="2.5"/>
-        <text x="400" y="216" class="label" text-anchor="middle" style="fill:var(--accent2);">Node bridge: br-secondary / OVS br-int</text>
-        <text x="400" y="234" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Multus NAD → bridge CNI / OVS CNI / localnet</text>
+        <rect x="290" y="190" width="450" height="35" class="ovs-box" style="stroke-width:2;"/>
+        <text x="515" y="212" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">ovs-br1 (OVN-managed)</text>
 
-        <line x1="400" y1="244" x2="400" y2="268" style="stroke:var(--fg-dim); stroke-width:2;"/>
+        <line x1="140" y1="225" x2="140" y2="255" class="cable"/>
+        <text x="140" y="270" class="label-sm" text-anchor="middle" style="fill:#fff;">enp7s0 (NIC 2)</text>
+        <line x1="515" y1="225" x2="515" y2="255" class="cable"/>
+        <text x="515" y="270" class="label-sm" text-anchor="middle" style="fill:#fff;">enp8s0 (NIC 3)</text>
 
-        <!-- NMState / node config -->
-        <rect x="200" y="268" width="400" height="36" rx="6" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
-        <text x="400" y="291" class="label-sm" text-anchor="middle" style="fill:var(--vlan123);">NMState NodeNetworkConfigurationPolicy</text>
-
-        <line x1="400" y1="304" x2="400" y2="328" style="stroke:var(--fg-dim); stroke-width:2;"/>
-
-        <!-- Physical NIC -->
-        <rect x="250" y="328" width="300" height="36" rx="6" fill="#292929" stroke="var(--fg-dim)" stroke-width="2"/>
-        <text x="400" y="351" class="label" text-anchor="middle" style="fill:#fff; font-size:14px;">Physical NIC (ens4)</text>
-
-        <line x1="400" y1="364" x2="400" y2="388" style="stroke:var(--fg-dim); stroke-width:2;"/>
-
-        <!-- ToR switch -->
-        <rect x="280" y="388" width="240" height="30" rx="4" fill="#1f1f1f" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="400" y="408" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Top-of-Rack Switch</text>
-
-        <!-- tcpdump annotation -->
-        <text x="710" y="105" class="label-sm" style="fill:var(--accent);">← tcpdump here</text>
-        <line x1="700" y1="100" x2="556" y2="100" style="stroke:var(--accent); stroke-width:1; stroke-dasharray:3 2;"/>
-        <text x="710" y="160" class="label-sm" style="fill:var(--accent);">← tcpdump here</text>
-        <line x1="700" y1="155" x2="655" y2="155" style="stroke:var(--accent); stroke-width:1; stroke-dasharray:3 2;"/>
-        <text x="710" y="222" class="label-sm" style="fill:var(--accent2);">← ofproto/trace</text>
-        <line x1="700" y1="217" x2="665" y2="217" style="stroke:var(--accent2); stroke-width:1; stroke-dasharray:3 2;"/>
+        <rect x="200" y="285" width="400" height="22" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
+        <text x="400" y="300" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">br-lab (host) &mdash; same VLAN fabric</text>
       </svg>
     </div>
-    <div class="takeaway">Debugging = knowing where to look. <code>tcpdump</code> at the tap/veth layer; <code>ofproto/trace</code> at the OVS layer.</div>
-    <span class="lab-ref">Lab guide: Section 5f</span>
+    <div class="takeaway">Appliances on <code>br-secondary</code> (NIC 2), tenants on <code>ovs-br1</code> (NIC 3). Both connect to the same upstream &mdash; cross-VLAN traffic flows through the firewall.</div>
+    <span class="lab-ref">Lab: Section 5e</span>
   </section>
 
-  <!-- Multus vs UDN -->
   <section>
     <span class="phase-badge p5">Phase 5</span>
-    <h2>Secondary Networks: Multus vs UDN</h2>
-    <div class="compare-grid" style="margin-top:0.6em;">
-      <div class="compare-card" style="padding:0.8em;">
-        <h4 style="color:var(--accent2); font-size:0.8em;">Multus + Bridge/OVS CNI</h4>
-        <div style="font-size:0.6em;">
-          <p><strong>How:</strong> NetworkAttachmentDefinition → CNI plugin creates port on node bridge</p>
-          <p style="margin-top:0.2em;"><strong>VLAN:</strong> <code>"vlan": 100</code> for access, <code>"vlan": 0</code> for trunk</p>
-          <p style="margin-top:0.2em;"><strong>IPAM:</strong> External (Whereabouts / static)</p>
-          <p style="margin-top:0.2em;"><strong>NetworkPolicy:</strong> Does not apply to secondary interfaces</p>
-          <p style="margin-top:0.2em;"><strong>Scope:</strong> Node-local bridge (L2 within node)</p>
-        </div>
-      </div>
-      <div class="compare-card" style="padding:0.8em;">
-        <h4 style="color:var(--vlan150); font-size:0.8em;">UDN (User Defined Network)</h4>
-        <div style="font-size:0.6em;">
-          <p><strong>How:</strong> OVN logical switch → managed by OVN-Kubernetes</p>
-          <p style="margin-top:0.2em;"><strong>Topologies:</strong> Layer2 / Layer3 / Localnet</p>
-          <p style="margin-top:0.2em;"><strong>IPAM:</strong> Built-in (OVN DHCP)</p>
-          <p style="margin-top:0.2em;"><strong>NetworkPolicy:</strong> <strong style="color:var(--success);">Applies natively</strong> (OVN ACLs)</p>
-          <p style="margin-top:0.2em;"><strong>Scope:</strong> Cluster-wide (Geneve overlay or localnet)</p>
-        </div>
-      </div>
+    <h2>Critical Constraints</h2>
+    <div style="font-size:0.58em;">
+      <div class="constraint-box"><strong>1.</strong> OVS CNI removed in OCP 4.17+. <code>failed to find plugin "ovs"</code>.</div>
+      <div class="constraint-box"><strong>2.</strong> Localnet = <code>ClusterUserDefinedNetwork</code> only. UDN supports Layer2/Layer3 only.</div>
+      <div class="constraint-box"><strong>3.</strong> CUDN Localnet VLAN is access-mode only. No 802.1Q trunk.</div>
+      <div class="constraint-box"><strong>4.</strong> Primary UDN namespace label required at creation. Cannot be added later.</div>
+      <div class="constraint-box"><strong>5.</strong> Primary UDN VMs lose <code>virtctl ssh</code>, <code>oc port-forward</code>, headless services.</div>
+      <div class="constraint-box"><strong>6.</strong> No IPAM for VMs on linux-bridge NADs or CUDN Localnet. Use cloud-init.</div>
+      <div class="constraint-box"><strong>7.</strong> SR-IOV: no live migration, no hot-unplug.</div>
+      <div class="constraint-box"><strong>8.</strong> Hot-plug limits: 4 PCI slots total (including existing interfaces).</div>
+      <div class="constraint-box"><strong>9.</strong> Default pod network traffic interrupted during live migration.</div>
+      <div class="constraint-box"><strong>10.</strong> MultiNetworkPolicy on secondaries: <code>ipBlock</code> only for VMs.</div>
     </div>
-    <div class="takeaway" style="margin-top:0.5em; font-size:0.7em;">
-      UDN is the future direction on OVN-Kubernetes. Use Multus bridge CNI for raw L2/trunk pass-through; use UDN for managed, policy-aware networks.
-    </div>
-    <span class="lab-ref">Lab guide: Sections 5c–5e</span>
-  </section>
-
-  <!-- UDN topologies -->
-  <section>
-    <span class="phase-badge p5">Phase 5e</span>
-    <h2>UDN Topologies</h2>
-    <div class="compare-grid three" style="margin-top:0.8em; font-size:0.72em;">
-      <div class="compare-card">
-        <h4 style="color:var(--vlan100);">Layer2</h4>
-        <div class="diagram" style="margin:0.5em 0;">
-          <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-            <rect x="20" y="40" width="160" height="30" rx="4" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
-            <text x="100" y="60" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">Flat L2 segment</text>
-            <circle cx="50" cy="25" r="12" fill="var(--bg-card)" stroke="var(--vlan100)" stroke-width="1.5"/>
-            <text x="50" y="29" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">P</text>
-            <circle cx="100" cy="25" r="12" fill="var(--bg-card)" stroke="var(--vlan100)" stroke-width="1.5"/>
-            <text x="100" y="29" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">P</text>
-            <circle cx="150" cy="25" r="12" fill="var(--bg-card)" stroke="var(--vlan100)" stroke-width="1.5"/>
-            <text x="150" y="29" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">P</text>
-            <line x1="50" y1="37" x2="50" y2="40" style="stroke:var(--vlan100); stroke-width:1.5;"/>
-            <line x1="100" y1="37" x2="100" y2="40" style="stroke:var(--vlan100); stroke-width:1.5;"/>
-            <line x1="150" y1="37" x2="150" y2="40" style="stroke:var(--vlan100); stroke-width:1.5;"/>
-            <text x="100" y="90" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">All pods: same subnet</text>
-          </svg>
-        </div>
-        <p>Like a bridge/VLAN segment. All pods on the same L2 domain.</p>
-      </div>
-      <div class="compare-card">
-        <h4 style="color:var(--vlan123);">Layer3</h4>
-        <div class="diagram" style="margin:0.5em 0;">
-          <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-            <circle cx="100" cy="30" r="16" fill="var(--bg-card)" stroke="var(--vlan123)" stroke-width="2"/>
-            <text x="100" y="34" class="label-sm" text-anchor="middle" style="fill:var(--vlan123); font-size:10px;">RTR</text>
-            <rect x="10" y="60" width="70" height="25" rx="4" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
-            <text x="45" y="77" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">10.200.1.0/24</text>
-            <rect x="120" y="60" width="70" height="25" rx="4" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="1.5"/>
-            <text x="155" y="77" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">10.200.2.0/24</text>
-            <line x1="85" y1="42" x2="45" y2="60" style="stroke:var(--vlan123); stroke-width:1.5;"/>
-            <line x1="115" y1="42" x2="155" y2="60" style="stroke:var(--vlan123); stroke-width:1.5;"/>
-            <text x="45" y="97" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Node 1</text>
-            <text x="155" y="97" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Node 2</text>
-          </svg>
-        </div>
-        <p>Per-node subnets with OVN routing. Scales better.</p>
-      </div>
-      <div class="compare-card">
-        <h4 style="color:var(--warn);">Localnet</h4>
-        <div class="diagram" style="margin:0.5em 0;">
-          <svg viewBox="0 0 200 100" xmlns="http://www.w3.org/2000/svg">
-            <rect x="30" y="10" width="140" height="25" rx="4" fill="#1f1a1f" stroke="var(--vlan150)" stroke-width="1.5"/>
-            <text x="100" y="27" class="label-sm" text-anchor="middle" style="fill:var(--vlan150); font-size:10px;">OVN Logical Switch</text>
-            <line x1="100" y1="35" x2="100" y2="48" style="stroke:var(--warn); stroke-width:2; stroke-dasharray:3 2;"/>
-            <text x="100" y="57" class="vlan-tag" text-anchor="middle" style="fill:var(--warn);">localnet port</text>
-            <rect x="30" y="62" width="140" height="25" rx="4" fill="#292929" stroke="var(--accent2)" stroke-width="1.5"/>
-            <text x="100" y="79" class="label-sm" text-anchor="middle" style="fill:var(--accent2); font-size:10px;">OVS bridge mapping</text>
-            <line x1="100" y1="87" x2="100" y2="97" style="stroke:var(--fg-dim); stroke-width:1.5;"/>
-            <text x="165" y="97" class="label-sm" style="fill:var(--fg-dim); font-size:9px;">→ Physical NIC</text>
-          </svg>
-        </div>
-        <p>Maps OVN to physical VLAN via OVS bridge mapping.</p>
-      </div>
-    </div>
-    <span class="lab-ref">Lab guide: Section 5e</span>
-  </section>
-
-  <!-- 5e-1: OVS CNI trunk -->
-  <section>
-    <span class="phase-badge p5">Phase 5e-1</span>
-    <h2>OVS CNI: Per-VM VLAN Trunks on OCP</h2>
-    <p class="subtitle">The bridge CNI trunk passes all VLANs &mdash; OVS CNI gives each VM its own allow-list</p>
-    <div class="diagram">
-      <svg viewBox="0 0 800 310" xmlns="http://www.w3.org/2000/svg">
-        <!-- OVS bridge on node -->
-        <rect x="80" y="150" width="640" height="48" class="ovs-box"/>
-        <text x="400" y="172" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:15px;">ovs-br1 (NMState-managed OVS bridge on each node)</text>
-        <text x="400" y="188" class="label-sm" text-anchor="middle">Per-port trunk lists enforced by OVS — same as Phase 3</text>
-
-        <!-- fw-dmz VM -->
-        <rect x="70" y="15" width="200" height="95" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <text x="170" y="38" class="label" text-anchor="middle" style="fill:var(--danger); font-size:13px;">fw-dmz VM</text>
-        <text x="170" y="56" class="label-sm" text-anchor="middle">eth1 — single trunk NIC</text>
-        <rect x="100" y="68" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
-        <text x="125" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
-        <rect x="158" y="68" width="50" height="18" rx="3" fill="var(--vlan200)" opacity="0.4"/>
-        <text x="183" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
-        <text x="170" y="104" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-dmz</text>
-        <line x1="170" y1="110" x2="170" y2="150" style="stroke:var(--warn); stroke-width:2.5;"/>
-
-        <!-- fw-internal VM -->
-        <rect x="310" y="15" width="200" height="95" rx="8" fill="#1a1f1a" stroke="var(--vlan123)" stroke-width="2"/>
-        <text x="410" y="38" class="label" text-anchor="middle" style="fill:var(--vlan123); font-size:13px;">fw-internal VM</text>
-        <text x="410" y="56" class="label-sm" text-anchor="middle">eth1 — single trunk NIC</text>
-        <rect x="345" y="68" width="50" height="18" rx="3" fill="var(--vlan123)" opacity="0.4"/>
-        <text x="370" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan123);">123</text>
-        <rect x="403" y="68" width="50" height="18" rx="3" fill="var(--vlan150)" opacity="0.4"/>
-        <text x="428" y="81" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan150);">150</text>
-        <text x="410" y="104" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-internal</text>
-        <line x1="410" y1="110" x2="410" y2="150" style="stroke:var(--warn); stroke-width:2.5;"/>
-
-        <!-- monitor VM -->
-        <rect x="550" y="15" width="190" height="95" rx="8" fill="#1f1f1f" stroke="var(--accent3)" stroke-width="2"/>
-        <text x="645" y="38" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:13px;">monitor VM</text>
-        <text x="645" y="56" class="label-sm" text-anchor="middle">eth1 — all VLANs</text>
-        <rect x="570" y="68" width="28" height="16" rx="2" fill="var(--vlan100)" opacity="0.4"/>
-        <rect x="602" y="68" width="28" height="16" rx="2" fill="var(--vlan200)" opacity="0.4"/>
-        <rect x="634" y="68" width="28" height="16" rx="2" fill="var(--vlan123)" opacity="0.4"/>
-        <rect x="666" y="68" width="28" height="16" rx="2" fill="var(--vlan150)" opacity="0.4"/>
-        <text x="645" y="104" class="label-code" text-anchor="middle" style="font-size:10px;">NAD: trunk-all</text>
-        <line x1="645" y1="110" x2="645" y2="150" style="stroke:var(--accent3); stroke-width:2.5;"/>
-
-        <!-- Isolation X -->
-        <text x="290" y="45" class="label" text-anchor="middle" style="fill:var(--danger); font-size:18px;">✕</text>
-
-        <!-- Physical NIC -->
-        <rect x="330" y="220" width="140" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="400" y="240" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (physical NIC)</text>
-        <line x1="400" y1="198" x2="400" y2="220" class="cable"/>
-
-        <!-- Key insight -->
-        <rect x="80" y="265" width="640" height="38" rx="6" fill="var(--bg-card)" stroke="#383838" stroke-width="1"/>
-        <text x="400" y="283" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">
-          OVS CNI <tspan style="fill:var(--accent2);">"trunk": [{"id": 100}, {"id": 200}]</tspan> → maps to
-          <tspan style="fill:var(--accent);">ovs-vsctl set port ... trunks=100,200</tspan>
-        </text>
-        <text x="400" y="298" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Each VM gets its own OVS port with its own VLAN allow-list — the Phase 3 model on Kubernetes</text>
-      </svg>
-    </div>
-    <span class="lab-ref">Lab guide: Section 5e-1</span>
-  </section>
-
-  <!-- OVS CNI trunk NAD detail -->
-  <section>
-    <span class="phase-badge p5">Phase 5e-1</span>
-    <h2>OVS CNI Trunk NADs</h2>
-    <p class="subtitle">One NAD per firewall role &mdash; different VLAN allow-lists</p>
-    <div class="compare-grid three" style="margin-top:0.5em; font-size:0.65em;">
-      <div class="compare-card" style="padding:0.7em; border-color:var(--danger);">
-        <h4 style="color:var(--danger); font-size:0.85em;">trunk-dmz</h4>
-        <pre style="font-size:0.85em; width:100%;"><code>"type": "ovs",
-"bridge": "ovs-br1",
-"trunk": [
-  { "id": 100 },
-  { "id": 200 }
-]</code></pre>
-        <p style="margin-top:0.3em;">fw-dmz sees <span class="chip v100">100</span> <span class="chip v200">200</span></p>
-      </div>
-      <div class="compare-card" style="padding:0.7em; border-color:var(--vlan123);">
-        <h4 style="color:var(--vlan123); font-size:0.85em;">trunk-internal</h4>
-        <pre style="font-size:0.85em; width:100%;"><code>"type": "ovs",
-"bridge": "ovs-br1",
-"trunk": [
-  { "id": 123 },
-  { "id": 150 }
-]</code></pre>
-        <p style="margin-top:0.3em;">fw-internal sees <span class="chip v123">123</span> <span class="chip v150">150</span></p>
-      </div>
-      <div class="compare-card" style="padding:0.7em; border-color:var(--accent3);">
-        <h4 style="color:var(--accent3); font-size:0.85em;">trunk-all</h4>
-        <pre style="font-size:0.85em; width:100%;"><code>"type": "ovs",
-"bridge": "ovs-br1",
-"trunk": [
-  { "minID": 1,
-    "maxID": 4094 }
-]</code></pre>
-        <p style="margin-top:0.3em;">monitor sees all VLANs</p>
-      </div>
-    </div>
-    <div style="font-size:0.7em; margin-top:0.6em;">
-      <p><strong>Day-2:</strong> Add VLAN 300 to fw-dmz → <code>oc edit nad trunk-dmz</code>, add <code>{"id": 300}</code> to trunk array. <strong style="color:var(--success);">No VM restart.</strong></p>
-      <p style="margin-top:0.2em;"><strong>Verify isolation:</strong> <code>oc debug node/&lt;n&gt; -- chroot /host ovs-appctl ofproto/trace ovs-br1 "in_port=&lt;fw-dmz-port&gt;,dl_vlan=123,..."</code> → <strong style="color:var(--danger);">drop</strong></p>
-    </div>
-    <span class="lab-ref">Lab guide: Section 5e-1</span>
-  </section>
-
-  <!-- Three-way comparison: Bridge CNI vs OVS CNI vs Localnet -->
-  <section>
-    <span class="phase-badge p5">Phase 5</span>
-    <h2>Three Approaches to Firewall VM Trunks on OCP</h2>
-    <div class="compare-grid three" style="margin-top:0.5em; font-size:0.62em;">
-      <div class="compare-card warn" style="padding:0.7em;">
-        <h4 style="color:var(--warn); font-size:0.9em;">Bridge CNI trunk</h4>
-        <p><code>"vlan": 0</code></p>
-        <div style="margin:0.4em 0; padding:0.4em; background:var(--bg-card-alt); border-radius:4px;">
-          <strong>VM sees:</strong> All VLANs on one trunk NIC<br>
-          <strong>Per-VM filter:</strong> <span style="color:var(--danger);">No</span><br>
-          <strong>Day-2 add VLAN:</strong> N/A (all VLANs pass)<br>
-          <strong>NetworkPolicy:</strong> <span style="color:var(--danger);">No</span><br>
-          <strong>ofproto/trace:</strong> <span style="color:var(--danger);">No</span> (linux bridge)
-        </div>
-        <p style="color:var(--fg-dim);">Simple. All VMs on the bridge see the same VLANs.</p>
-      </div>
-      <div class="compare-card good" style="padding:0.7em;">
-        <h4 style="color:var(--success); font-size:0.9em;">OVS CNI trunk</h4>
-        <p><code>"trunk": [{"id": N}]</code></p>
-        <div style="margin:0.4em 0; padding:0.4em; background:var(--bg-card-alt); border-radius:4px;">
-          <strong>VM sees:</strong> One trunk NIC, tagged 802.1Q<br>
-          <strong>Per-VM filter:</strong> <span style="color:var(--success);">Yes</span> (per-NAD)<br>
-          <strong>Day-2 add VLAN:</strong> Edit NAD, <span style="color:var(--success);">no restart</span><br>
-          <strong>NetworkPolicy:</strong> <span style="color:var(--danger);">No</span> (bypasses OVN)<br>
-          <strong>ofproto/trace:</strong> <span style="color:var(--success);">Yes</span>
-        </div>
-        <p style="color:var(--success);">Best for firewall appliances expecting 802.1Q trunks.</p>
-      </div>
-      <div class="compare-card" style="padding:0.7em; border-color:var(--vlan150);">
-        <h4 style="color:var(--vlan150); font-size:0.9em;">Localnet per-VLAN</h4>
-        <p>One UDN per VLAN</p>
-        <div style="margin:0.4em 0; padding:0.4em; background:var(--bg-card-alt); border-radius:4px;">
-          <strong>VM sees:</strong> One NIC per VLAN, untagged<br>
-          <strong>Per-VM filter:</strong> <span style="color:var(--success);">Yes</span> (which UDNs attached)<br>
-          <strong>Day-2 add VLAN:</strong> New UDN + VM spec, <span style="color:var(--warn);">restart</span><br>
-          <strong>NetworkPolicy:</strong> <span style="color:var(--success);">Yes</span> (OVN enforces)<br>
-          <strong>ofproto/trace:</strong> <span style="color:var(--success);">Yes</span> (OVN flows)
-        </div>
-        <p style="color:var(--vlan150);">Best when VM doesn't need tags or you want per-VLAN policy.</p>
-      </div>
-    </div>
-    <div class="takeaway" style="margin-top:0.4em; font-size:0.68em;">
-      For firewall VMs expecting a standard 802.1Q trunk, <strong>OVS CNI is the right choice</strong>. Localnet-per-VLAN is better when you want OVN NetworkPolicy enforcement on each VLAN individually.
-    </div>
-    <span class="lab-ref">Lab guide: Sections 5e-1, 5e-2, 5f</span>
+    <p style="font-size:0.5em; color:var(--fg-dim); margin-top:0.5em;">Full list with documentation links: <code>cheatsheet.md</code></p>
+    <span class="lab-ref">Lab: Errata</span>
   </section>
 </section>
 
 <!-- ============================================================ -->
-<!-- DECISION FRAMEWORK -->
+<!-- SECTION 7: DECISION FRAMEWORK -->
 <!-- ============================================================ -->
 <section>
   <section>
     <div class="phase-title" style="min-height:50vh;">
-      <h2>Consulting<br>Decision Framework</h2>
-      <p class="subtitle" style="font-size:0.7em;">Choosing the right network construct for KubeVirt VMs</p>
+      <span class="phase-badge decision">Decision Framework</span>
+      <h2>What Kind of VM Is This?</h2>
+      <p class="subtitle">The persona determines the mechanism</p>
     </div>
   </section>
 
-  <!-- Use case matrix -->
   <section>
-    <h2>Use Case → Best Construct</h2>
-    <table style="font-size:0.55em; margin-top:0.5em;">
-      <tr><th>Use Case</th><th>Best Construct</th><th>Why</th></tr>
-      <tr>
-        <td>Firewall VM, static VLANs</td>
-        <td style="color:var(--warn);">VLAN-aware bridge + bridge CNI</td>
-        <td>Simplest, lowest latency, no OVS needed</td>
-      </tr>
-      <tr>
-        <td>Firewall VM, dynamic VLANs</td>
-        <td style="color:var(--accent2);">OVS CNI trunk NAD</td>
-        <td>Per-VM 802.1Q trunk — what appliances expect</td>
-      </tr>
-      <tr>
-        <td>Tenant workload VMs behind firewall</td>
-        <td style="color:var(--vlan150);">UDN Localnet (one per VLAN)</td>
-        <td>Untagged NIC, OVN-managed, NetworkPolicy</td>
-      </tr>
-      <tr style="background:rgba(0,102,204,0.08);">
-        <td><strong>Firewall + tenants at scale</strong></td>
-        <td style="color:var(--accent3);"><strong>Hybrid:</strong> OVS CNI trunk + Localnet UDN</td>
-        <td>Both on same OVS bridge — see next slides</td>
-      </tr>
-      <tr>
-        <td>Direct L2 to physical network</td>
-        <td style="color:var(--accent);">macvlan (bridge mode) via Multus</td>
-        <td>Lowest overhead (can't talk to host)</td>
-      </tr>
-      <tr>
-        <td>Switch MAC-per-port limits</td>
-        <td style="color:var(--accent3);">ipvlan L2 via Multus</td>
-        <td>Single MAC shared across sub-interfaces</td>
-      </tr>
-      <tr>
-        <td>Tenant isolation (namespace-scoped)</td>
-        <td style="color:var(--vlan150);">UDN Layer2 or Layer3</td>
-        <td>Native OVN-K8s, built-in NetworkPolicy</td>
-      </tr>
-      <tr>
-        <td>High-performance SR-IOV</td>
-        <td>SR-IOV CNI + Multus</td>
-        <td>Bypasses kernel — telco/NFV</td>
-      </tr>
-      <tr>
-        <td>East-west micro-segmentation</td>
-        <td style="color:var(--vlan150);">OVN ACLs via NetworkPolicy</td>
-        <td>Stateful firewall in OVS datapath</td>
-      </tr>
+    <h2>Scenario Decision Matrix</h2>
+    <table style="font-size:0.52em; margin-top:0.5em;">
+      <tr><th>Requirement</th><th>Best Choice</th><th>Why</th></tr>
+      <tr><td>Simple L2 on a VLAN</td><td style="color:var(--warn);">Linux-bridge NAD</td><td>Simplest: NNCP + NAD + VM</td></tr>
+      <tr><td>L2 + NetworkPolicy</td><td style="color:var(--vlan123);">CUDN Localnet</td><td>OVN enforces policy</td></tr>
+      <tr><td>Tenant isolation</td><td style="color:#b090e0;">Primary UDN Layer2</td><td>Replaces default pod network</td></tr>
+      <tr><td>802.1Q trunk (appliance)</td><td style="color:var(--warn);">Linux-bridge trunk (<code>"vlan": 0</code>)</td><td>Only remaining trunk on OCP 4.17+</td></tr>
+      <tr><td>Per-VM VLAN filtering</td><td>SR-IOV</td><td>Hardware VLAN filtering per VF</td></tr>
+      <tr><td>Max performance (no migration)</td><td>SR-IOV</td><td>Hardware passthrough</td></tr>
+      <tr><td>Live migration + persistent IPs</td><td style="color:#b090e0;">UDN Layer2 (primary)</td><td>IPs preserved across migration</td></tr>
+      <tr><td>East-west micro-segmentation</td><td style="color:#b090e0;">NetworkPolicy on CUDN/UDN</td><td>OVN ACLs in datapath</td></tr>
+      <tr style="background:#1f2838;"><td><strong>All three personas at scale</strong></td><td style="color:var(--accent3);"><strong>Two-bridge hybrid</strong></td><td>Appliances on NIC 2, tenants on NIC 3</td></tr>
     </table>
-    <span class="lab-ref">Lab guide: Consulting Decision Framework</span>
+    <span class="lab-ref">Lab: Decision Framework</span>
   </section>
 
-  <!-- The punchline -->
   <section data-background="linear-gradient(135deg, #151515, #1f1f1f, #151515)">
-    <h2 style="text-align:center;">The Punchline</h2>
+    <h2 style="text-align:center;">The Punchline (OCP 4.17+)</h2>
     <div style="margin-top:1.5em;">
       <div class="decision-box">
-        Will different VMs need <strong style="color:var(--warn);">different VLAN subsets</strong>,<br>
-        and will those subsets <strong style="color:var(--warn);">change over time</strong>?
+        What <strong style="color:var(--warn);">kind of VM</strong> is this?
       </div>
-      <div class="answer-row" style="margin-top:0.6em;">
-        <div class="answer-card green" style="padding:0.7em 1em;">
-          <h3 style="font-size:1.1em;">No</h3>
-          <p style="font-size:0.6em; color:var(--fg-dim); margin-top:0.3em;">VLAN-aware Linux bridge + bridge CNI</p>
-          <p style="font-size:0.55em; color:var(--success); margin-top:0.2em;">Simplest, lowest latency</p>
+      <div class="answer-row" style="margin-top:0.8em;">
+        <div class="answer-card green" style="padding:0.7em;">
+          <h3 style="font-size:1em;">Normal VM</h3>
+          <p style="font-size:0.55em; color:var(--fg-dim); margin-top:0.3em;">CUDN Localnet (with policy)<br>or linux-bridge NAD (simple)</p>
         </div>
-        <div class="answer-card orange" style="padding:0.7em 1em;">
-          <h3 style="font-size:1.1em;">Yes</h3>
-          <p style="font-size:0.6em; color:var(--fg-dim); margin-top:0.3em;">OVS per-port trunk lists</p>
-          <p style="font-size:0.55em; color:var(--accent2); margin-top:0.2em;">Declarative, persistent, verifiable</p>
+        <div class="answer-card blue" style="padding:0.7em;">
+          <h3 style="font-size:1em;">VPC Tenant</h3>
+          <p style="font-size:0.55em; color:var(--fg-dim); margin-top:0.3em;">Primary UDN Layer2<br>(persistent IPs, isolation)</p>
         </div>
-        <div class="answer-card blue" style="padding:0.7em 1em;">
-          <h3 style="font-size:1.1em;">At Scale</h3>
-          <p style="font-size:0.6em; color:var(--fg-dim); margin-top:0.3em;">It's a <strong>hybrid</strong> — not one construct</p>
-          <p style="font-size:0.5em; color:var(--accent2); margin-top:0.15em;">Firewall VM: OVS CNI trunk (802.1Q)</p>
-          <p style="font-size:0.5em; color:var(--vlan150); margin-top:0.1em;">Tenant VMs: Localnet UDN (NetworkPolicy)</p>
-          <p style="font-size:0.45em; color:var(--accent3); margin-top:0.15em;">Both share the same OVS bridge on each node</p>
+        <div class="answer-card orange" style="padding:0.7em;">
+          <h3 style="font-size:1em;">Appliance</h3>
+          <p style="font-size:0.55em; color:var(--fg-dim); margin-top:0.3em;">Linux-bridge trunk<br>(<code>"vlan": 0</code>)</p>
         </div>
       </div>
+      <p style="text-align:center; font-size:0.6em; color:var(--fg-dim); margin-top:1em;">All three at scale &rarr; <strong>Two-bridge hybrid model</strong></p>
     </div>
-    <span class="lab-ref">Lab guide: The Punchline</span>
+    <span class="lab-ref">Lab: Decision Framework</span>
   </section>
 
-  <!-- At-scale hybrid detail -->
   <section>
-    <h2>At Scale: The Hybrid Model</h2>
-    <p class="subtitle">Two constructs, one OVS bridge — firewall gets trunk, tenants get policy</p>
-    <div class="diagram">
-      <svg viewBox="0 0 800 370" xmlns="http://www.w3.org/2000/svg">
-        <!-- OCP Node boundary -->
-        <rect x="20" y="8" width="760" height="355" rx="12" fill="none" stroke="var(--fg-dim)" stroke-width="1" stroke-dasharray="6 3"/>
-        <text x="400" y="28" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OCP Node</text>
-
-        <!-- Policy boundary: OVN-managed zone -->
-        <rect x="310" y="38" width="440" height="155" rx="8" fill="rgba(0,102,204,0.05)" stroke="var(--accent3)" stroke-width="1.5" stroke-dasharray="5 3"/>
-        <text x="530" y="55" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:10px;">OVN-managed — NetworkPolicy enforced here</text>
-
-        <!-- Firewall VM (outside OVN zone) -->
-        <rect x="40" y="42" width="230" height="145" rx="8" fill="#1f1515" stroke="var(--danger)" stroke-width="2"/>
-        <text x="155" y="65" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">fw-dmz VM</text>
-        <text x="155" y="83" class="label-sm" text-anchor="middle">Firewall appliance</text>
-        <text x="155" y="103" class="label-sm" text-anchor="middle" style="fill:var(--accent2);">eth1: 802.1Q trunk</text>
-        <rect x="72" y="112" width="50" height="18" rx="3" fill="var(--vlan100)" opacity="0.4"/>
-        <text x="97" y="125" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan100);">100</text>
-        <rect x="130" y="112" width="50" height="18" rx="3" fill="var(--vlan200)" opacity="0.4"/>
-        <text x="155" y="125" class="vlan-tag" text-anchor="middle" style="fill:var(--vlan200);">200</text>
-        <text x="155" y="152" class="label-code" text-anchor="middle" style="font-size:10px;">OVS CNI trunk NAD</text>
-        <text x="155" y="170" class="label-sm" text-anchor="middle" style="fill:var(--danger); font-size:9px;">NetworkPolicy: ✕ (bypasses OVN)</text>
-        <text x="155" y="183" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:9px;">Policy point: the appliance itself</text>
-
-        <!-- Tenant A VM (inside OVN zone) -->
-        <rect x="330" y="65" width="190" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="2"/>
-        <text x="425" y="88" class="label" text-anchor="middle" style="fill:var(--vlan100); font-size:13px;">app-vm (tenant-a)</text>
-        <text x="425" y="106" class="label-sm" text-anchor="middle">eth1: VLAN 100 untagged</text>
-        <text x="425" y="126" class="label-code" text-anchor="middle" style="font-size:10px;">Localnet UDN phys-vlan100</text>
-        <text x="425" y="148" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: ✓ (OVN enforces)</text>
-        <text x="425" y="163" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:9px;">East-west segmentation within VLAN</text>
-
-        <!-- Tenant B VM (inside OVN zone) -->
-        <rect x="550" y="65" width="190" height="120" rx="8" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="2"/>
-        <text x="645" y="88" class="label" text-anchor="middle" style="fill:var(--vlan200); font-size:13px;">db-vm (tenant-b)</text>
-        <text x="645" y="106" class="label-sm" text-anchor="middle">eth1: VLAN 200 untagged</text>
-        <text x="645" y="126" class="label-code" text-anchor="middle" style="font-size:10px;">Localnet UDN phys-vlan200</text>
-        <text x="645" y="148" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:9px;">NetworkPolicy: ✓ (OVN enforces)</text>
-        <text x="645" y="163" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:9px;">East-west segmentation within VLAN</text>
-
-        <!-- Connection lines down to OVS bridge -->
-        <line x1="155" y1="187" x2="155" y2="230" style="stroke:var(--accent2); stroke-width:2.5;"/>
-        <line x1="425" y1="185" x2="425" y2="230" style="stroke:var(--vlan100); stroke-width:2.5;"/>
-        <line x1="645" y1="185" x2="645" y2="230" style="stroke:var(--vlan200); stroke-width:2.5;"/>
-
-        <!-- Cross-VLAN arrow through firewall -->
-        <path d="M 425 195 L 290 195 L 155 190" fill="none" stroke="var(--warn)" stroke-width="1.5" stroke-dasharray="4 3"/>
-        <text x="290" y="210" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:8px;">cross-VLAN → must traverse firewall</text>
-
-        <!-- OVS bridge -->
-        <rect x="60" y="230" width="680" height="44" class="ovs-box"/>
-        <text x="400" y="250" class="label" text-anchor="middle" style="fill:var(--accent2); font-size:14px;">ovs-br1 (shared OVS bridge)</text>
-        <text x="400" y="265" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">OVS CNI ports + OVN localnet port bindings coexist</text>
-
-        <!-- Physical NIC -->
-        <line x1="400" y1="274" x2="400" y2="300" class="cable"/>
-        <rect x="310" y="300" width="180" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1.5"/>
-        <text x="400" y="320" class="label-sm" text-anchor="middle" style="fill:#fff;">ens4 (physical uplink)</text>
-
-        <!-- ToR -->
-        <line x1="400" y1="330" x2="400" y2="350" class="cable"/>
-        <text x="400" y="362" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim);">Physical switch / datacenter fabric</text>
-      </svg>
+    <h2>What Was Removed &amp; Why</h2>
+    <p class="subtitle">OVS CNI obituary &mdash; OCP 4.17+</p>
+    <table style="font-size:0.6em; margin-top:1em;">
+      <tr><th>Old (OVS CNI)</th><th>Replacement</th></tr>
+      <tr>
+        <td><code>"type": "ovs"</code> with <code>"trunk": [...]</code></td>
+        <td>Linux-bridge trunk (<code>"vlan": 0</code>) &mdash; no per-VM filtering</td>
+      </tr>
+      <tr>
+        <td><code>"type": "ovs"</code> with <code>"vlan": N</code></td>
+        <td>CUDN Localnet with <code>vlan.mode: Access</code></td>
+      </tr>
+      <tr>
+        <td>Per-port VLAN allow-lists</td>
+        <td>SR-IOV with VF VLAN filtering (hardware)</td>
+      </tr>
+    </table>
+    <div class="punchline" style="margin-top:1em; font-size:0.7em;">
+      <strong>Why removed:</strong> OVN-Kubernetes manages all OVS bridges via the southbound database. A standalone CNI that directly manipulates OVS ports conflicts with OVN's control plane &mdash; ports get deleted or reconfigured silently.
     </div>
-    <span class="lab-ref">Lab guide: At Scale with Firewalls</span>
+    <span class="lab-ref">Lab: Errata</span>
   </section>
+</section>
 
-  <!-- Policy boundaries: who enforces what -->
-  <section>
-    <h2>Policy Boundaries in the Hybrid Model</h2>
-    <p class="subtitle">NetworkPolicy covers the tenant side — the firewall covers everything else</p>
-    <div class="diagram" style="margin-top:0.3em;">
-      <svg viewBox="0 0 800 260" xmlns="http://www.w3.org/2000/svg">
-        <!-- Three traffic flow lanes -->
-        <!-- Lane 1: East-west within VLAN -->
-        <rect x="20" y="10" width="240" height="230" rx="8" fill="rgba(99,153,61,0.06)" stroke="var(--success)" stroke-width="1.5"/>
-        <text x="140" y="32" class="label" text-anchor="middle" style="fill:var(--success); font-size:12px;">Within VLAN (east-west)</text>
-        <rect x="40" y="48" width="80" height="40" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <text x="80" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">app-vm A</text>
-        <rect x="160" y="48" width="80" height="40" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <text x="200" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">app-vm B</text>
-        <path d="M 120 68 L 160 68" fill="none" stroke="var(--success)" stroke-width="2" marker-end="url(#arrowGreen)"/>
-        <text x="140" y="108" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:10px;">OVN NetworkPolicy</text>
-        <text x="140" y="122" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">enforces allow/deny</text>
-        <rect x="35" y="140" width="190" height="55" rx="4" fill="var(--bg-card)" stroke="var(--success)" stroke-width="1" stroke-dasharray="3 2"/>
-        <text x="130" y="158" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Localnet UDN → OVN ACLs</text>
-        <text x="130" y="172" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:10px;">Micro-segmentation: who can</text>
-        <text x="130" y="185" class="label-sm" text-anchor="middle" style="fill:var(--success); font-size:10px;">talk to whom within a VLAN</text>
-        <text x="140" y="215" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Standard K8s NetworkPolicy</text>
-        <text x="140" y="228" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">YAML — OVN translates to flows</text>
-
-        <!-- Lane 2: Cross-VLAN (inter-VLAN) -->
-        <rect x="280" y="10" width="240" height="230" rx="8" fill="rgba(220,166,20,0.06)" stroke="var(--warn)" stroke-width="1.5"/>
-        <text x="400" y="32" class="label" text-anchor="middle" style="fill:var(--warn); font-size:12px;">Cross-VLAN (inter-VLAN)</text>
-        <rect x="300" y="48" width="80" height="40" rx="6" fill="#1f1f1f" stroke="var(--vlan100)" stroke-width="1.5"/>
-        <text x="340" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan100);">VLAN 100</text>
-        <rect x="420" y="48" width="80" height="40" rx="6" fill="#1f1f1f" stroke="var(--vlan200)" stroke-width="1.5"/>
-        <text x="460" y="72" class="label-sm" text-anchor="middle" style="fill:var(--vlan200);">VLAN 200</text>
-        <path d="M 380 68 L 393 68" fill="none" stroke="var(--danger)" stroke-width="2"/>
-        <text x="400" y="72" class="label" text-anchor="middle" style="fill:var(--danger); font-size:14px;">✕</text>
-        <path d="M 407 68 L 420 68" fill="none" stroke="var(--danger)" stroke-width="2"/>
-        <text x="400" y="108" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:10px;">No direct path</text>
-        <text x="400" y="122" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">must route through firewall</text>
-        <rect x="340" y="140" width="120" height="55" rx="4" fill="#1f1515" stroke="var(--danger)" stroke-width="1.5"/>
-        <text x="400" y="158" class="label-sm" text-anchor="middle" style="fill:var(--danger); font-size:10px;">fw-dmz VM</text>
-        <text x="400" y="172" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Trunk: 100 + 200</text>
-        <text x="400" y="185" class="label-sm" text-anchor="middle" style="fill:var(--warn); font-size:9px;">Routes between VLANs</text>
-        <text x="400" y="215" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">Appliance firewall rules</text>
-        <text x="400" y="228" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">OVN has no visibility here</text>
-
-        <!-- Lane 3: North-south -->
-        <rect x="540" y="10" width="240" height="230" rx="8" fill="rgba(0,102,204,0.06)" stroke="var(--accent3)" stroke-width="1.5"/>
-        <text x="660" y="32" class="label" text-anchor="middle" style="fill:var(--accent3); font-size:12px;">North-South (ingress/egress)</text>
-        <rect x="600" y="48" width="120" height="40" rx="6" fill="#1f1515" stroke="var(--danger)" stroke-width="1.5"/>
-        <text x="660" y="72" class="label-sm" text-anchor="middle" style="fill:var(--danger);">fw-dmz VM</text>
-        <line x1="660" y1="88" x2="660" y2="120" style="stroke:var(--accent3); stroke-width:2;"/>
-        <rect x="600" y="120" width="120" height="30" rx="4" fill="#292929" stroke="var(--fg-dim)" stroke-width="1"/>
-        <text x="660" y="140" class="label-sm" text-anchor="middle" style="fill:#fff; font-size:10px;">Physical network</text>
-        <text x="660" y="170" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:10px;">Firewall controls what</text>
-        <text x="660" y="184" class="label-sm" text-anchor="middle" style="fill:var(--accent3); font-size:10px;">enters/leaves the cluster</text>
-        <text x="660" y="215" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">NAT, ACLs, IPS/IDS</text>
-        <text x="660" y="228" class="label-sm" text-anchor="middle" style="fill:var(--fg-dim); font-size:9px;">on the appliance</text>
-
-        <!-- Arrow defs -->
-        <defs>
-          <marker id="arrowGreen" markerWidth="8" markerHeight="6" refX="8" refY="3" orient="auto">
-            <path d="M 0 0 L 8 3 L 0 6 z" fill="var(--success)"/>
-          </marker>
-        </defs>
-      </svg>
-    </div>
-    <div class="takeaway" style="margin-top:0.2em; font-size:0.62em;">
-      <strong>"Trunk + NetworkPolicy"</strong> means NetworkPolicy on the <em>tenant</em> side (localnet UDNs), not on the firewall trunk.
-      The firewall itself is the policy enforcement point for inter-VLAN and north-south traffic.
-    </div>
-    <span class="lab-ref">Lab guide: At Scale with Firewalls</span>
-  </section>
-
-  <!-- Thank you / lab pointer -->
+<!-- ============================================================ -->
+<!-- SECTION 8: HANDS-ON + RESOURCES -->
+<!-- ============================================================ -->
+<section>
   <section>
     <div style="text-align:center; padding-top:3em;">
-      <h2>Hands-on time</h2>
+      <h2>Hands-on Time</h2>
       <p style="color:var(--fg-dim); font-size:0.8em; margin-top:1em;">
-        Open the lab guide and start with Phase 1:
+        Three resources for the lab and for customer engagements:
       </p>
-      <p style="margin-top:0.5em;">
-        <code style="font-size:1.1em;">consolidated-plan.md</code>
-      </p>
-      <div style="margin-top:2em; display:flex; justify-content:center; gap:1.5em; flex-wrap:wrap; font-size:0.7em;">
-        <div style="text-align:center;">
-          <div style="color:var(--accent); font-weight:700; font-size:1.4em;">5</div>
-          <div style="color:var(--fg-dim);">Phases</div>
+      <div style="margin-top:1.5em; display:flex; justify-content:center; gap:2em; flex-wrap:wrap; font-size:0.75em;">
+        <div style="text-align:center; background:var(--bg-card); padding:1.2em; border-radius:12px; border:1px solid #383838; width:220px;">
+          <div style="color:var(--accent); font-weight:700; font-size:1.2em;">cheatsheet.md</div>
+          <div style="color:var(--fg-dim); margin-top:0.3em;">Printable 2-page<br>constraint reference</div>
         </div>
-        <div style="text-align:center;">
-          <div style="color:var(--accent2); font-weight:700; font-size:1.4em;">20+</div>
-          <div style="color:var(--fg-dim);">Exercises</div>
+        <div style="text-align:center; background:var(--bg-card); padding:1.2em; border-radius:12px; border:1px solid #383838; width:220px;">
+          <div style="color:var(--accent2); font-weight:700; font-size:1.2em;">consolidated-plan.md</div>
+          <div style="color:var(--fg-dim); margin-top:0.3em;">Full lab manual<br>with copy-paste commands</div>
         </div>
-        <div style="text-align:center;">
-          <div style="color:var(--accent3); font-weight:700; font-size:1.4em;">0</div>
-          <div style="color:var(--fg-dim);">Nested VMs needed</div>
+        <div style="text-align:center; background:var(--bg-card); padding:1.2em; border-radius:12px; border:1px solid #383838; width:220px;">
+          <div style="color:var(--accent3); font-weight:700; font-size:1.2em;">slides.html</div>
+          <div style="color:var(--fg-dim); margin-top:0.3em;">This deck &mdash;<br>visual explainer</div>
         </div>
       </div>
-      <p style="color:var(--fg-dim); font-size:0.55em; margin-top:3em;">
-        ← → navigate phases &nbsp;&nbsp;|&nbsp;&nbsp; ↑ ↓ sub-sections &nbsp;&nbsp;|&nbsp;&nbsp; Esc overview &nbsp;&nbsp;|&nbsp;&nbsp; S speaker notes &nbsp;&nbsp;|&nbsp;&nbsp; F fullscreen
+    </div>
+  </section>
+
+  <section>
+    <h3>Reference Documentation (OCP 4.21)</h3>
+    <div style="font-size:0.65em; margin-top:1em;">
+      <p><strong>Virtualization Networking</strong> (Table 10.1, VM attachment guides):<br>
+        <code style="font-size:0.85em;">docs.redhat.com/.../4.21/html/virtualization/networking</code></p>
+      <p style="margin-top:0.5em;"><strong>Multiple Networks</strong> (UDN/CUDN/NAD support matrices):<br>
+        <code style="font-size:0.85em;">docs.redhat.com/.../4.21/html-single/multiple_networks/index</code></p>
+      <p style="margin-top:0.5em;"><strong>Kubernetes NMState</strong> (NNCPs for bridge and OVS setup):<br>
+        <code style="font-size:0.85em;">docs.redhat.com/.../4.21/html-single/kubernetes_nmstate/index</code></p>
+      <p style="margin-top:0.5em;"><strong>OVN-Kubernetes</strong> (OVN architecture, localnet internals):<br>
+        <code style="font-size:0.85em;">docs.redhat.com/.../4.21/html-single/ovn-kubernetes_network_plugin/index</code></p>
+    </div>
+    <div style="margin-top:1.5em;">
+      <p style="color:var(--fg-dim); font-size:0.55em;">
+        &larr; &rarr; navigate sections &nbsp;|&nbsp; &uarr; &darr; sub-slides &nbsp;|&nbsp; Esc overview &nbsp;|&nbsp; F fullscreen
       </p>
-      <p style="color:#707070; font-size:0.4em; margin-top:2em;">
-        © Red Hat. Brand standards: <a href="https://www.redhat.com/en/about/brand/standards" style="color:var(--accent3);">redhat.com/brand</a>
+      <p style="color:#999; font-size:0.4em; margin-top:1.5em;">
+        &copy; Red Hat. Brand standards: <a href="https://www.redhat.com/en/about/brand/standards" style="color:var(--accent3);">redhat.com/brand</a>
       </p>
     </div>
   </section>
